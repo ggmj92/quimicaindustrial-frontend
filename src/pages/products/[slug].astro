@@ -1,0 +1,320 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import {
+  getProducts,
+  getCategories,
+  getRelatedProducts,
+} from "../../data/products";
+import type { Product } from "../../data/products";
+
+export async function getStaticPaths() {
+  const products = await getProducts();
+  return products.map((product) => ({
+    params: { slug: product.slug },
+    props: { product },
+  }));
+}
+
+interface Props {
+  product: Product;
+}
+
+const { product } = Astro.props as Props;
+const categories = await getCategories();
+const productCategories = product.categories
+  .map((categoryId) =>
+    categories.find((category) => category.id === categoryId),
+  )
+  .filter(Boolean);
+const relatedProducts = (await getRelatedProducts(product.slug)).filter(
+  (item) => item.slug !== product.slug,
+);
+---
+
+<Layout
+  title={`${product.name} | Química Industrial`}
+  description={product.summary}
+  canonical={`https://www.quimicaindustrial.pe/products/${product.slug}`}
+>
+  <section class="product-detail">
+    <div class="container product-hero">
+      <div class="product-media">
+        <img
+          src={product.image}
+          alt={`Fotografía de ${product.name}`}
+          loading="lazy"
+        />
+      </div>
+      <div class="product-info">
+        <span class="tag">Ficha técnica</span>
+        <h1>{product.name}</h1>
+        <p class="product-summary">{product.summary}</p>
+        <ul class="product-categories">
+          {
+            productCategories.map((category) => (
+              <li>
+                <span>{category?.name}</span>
+              </li>
+            ))
+          }
+        </ul>
+
+        <div class="product-presentations">
+          <label for="presentations">Presentaciones disponibles</label>
+          <select id="presentations" data-product-select>
+            {
+              product.presentations.map((presentation) => (
+                <option
+                  value={presentation.id}
+                  data-label={presentation.label}
+                  data-minimum-order={presentation.minimumOrder || ""}
+                >
+                  {presentation.label}
+                  {presentation.minimumOrder &&
+                    ` (mínimo ${presentation.minimumOrder})`}
+                </option>
+              ))
+            }
+          </select>
+          {
+            product.presentations.map(
+              (presentation) =>
+                presentation.minimumOrder && (
+                  <p
+                    class="presentation-note"
+                    data-presentation-note={presentation.id}
+                    hidden
+                  >
+                    Pedido mínimo: {presentation.minimumOrder}
+                  </p>
+                ),
+            )
+          }
+        </div>
+
+        <div class="product-actions">
+          <button
+            class="btn btn-primary"
+            type="button"
+            data-action="add-to-cart"
+            data-product-id={product.id}
+            data-product-name={product.name}
+            data-product-slug={product.slug}
+            data-product-image={product.image}
+            data-product-presentation={product.presentations[0]?.label || ""}
+            data-presentation-id={product.presentations[0]?.id || ""}
+          >
+            Añadir al carrito de cotización
+          </button>
+          <a class="btn btn-outline" href="/cotizacion">Solicitar cotización</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="product-description">
+    <div class="container">
+      <h2>Descripción</h2>
+      <p>{product.description}</p>
+      <h3>Beneficios y soporte</h3>
+      <ul class="product-benefits">
+        {product.heroHighlights.map((highlight) => <li>{highlight}</li>)}
+      </ul>
+    </div>
+  </section>
+
+  <section class="related-products">
+    <div class="container">
+      <header class="section-header">
+        <div>
+          <span class="tag">También te puede interesar</span>
+          <h2>Productos relacionados</h2>
+        </div>
+      </header>
+      <div class="carousel">
+        {
+          relatedProducts.map((item) => {
+            const presentation = item.presentations[0];
+            return (
+              <article class="card carousel-item related-card">
+                <img
+                  src={item.image}
+                  alt={`Producto ${item.name}`}
+                  loading="lazy"
+                />
+                <div class="related-body">
+                  <h3>{item.name}</h3>
+                  <p>{item.summary}</p>
+                </div>
+                <div class="related-actions">
+                  <a class="btn btn-outline" href={`/products/${item.slug}`}>
+                    Ver detalle
+                  </a>
+                  <button
+                    class="btn btn-primary"
+                    type="button"
+                    data-action="add-to-cart"
+                    data-product-id={item.id}
+                    data-product-name={item.name}
+                    data-product-slug={item.slug}
+                    data-product-presentation={presentation?.label || ""}
+                    data-presentation-id={presentation?.id || ""}
+                    data-product-image={item.image}
+                  >
+                    Agregar
+                  </button>
+                </div>
+              </article>
+            );
+          })
+        }
+      </div>
+    </div>
+  </section>
+</Layout>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const select = document.querySelector("[data-product-select]");
+    const notes = document.querySelectorAll("[data-presentation-note]");
+    const button = document.querySelector(
+      '.product-actions [data-action="add-to-cart"]',
+    );
+
+    const updateFromSelect = () => {
+      if (
+        !(select instanceof HTMLSelectElement) ||
+        !(button instanceof HTMLElement)
+      )
+        return;
+      const selected = select.selectedOptions[0];
+      const label = selected?.dataset.label ?? "";
+      button.setAttribute("data-product-presentation", label);
+      button.setAttribute("data-presentation-id", selected?.value || "");
+      notes.forEach((note) => {
+        const shouldHide =
+          !selected ||
+          note.getAttribute("data-presentation-note") !== selected.value;
+        note.toggleAttribute("hidden", shouldHide);
+      });
+    };
+
+    select?.addEventListener("change", updateFromSelect);
+    updateFromSelect();
+  });
+</script>
+
+<style>
+  .product-detail {
+    padding-top: clamp(3rem, 6vw, 5rem);
+  }
+
+  .product-hero {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2.5rem;
+    align-items: center;
+  }
+
+  .product-media img {
+    width: 100%;
+    border-radius: clamp(24px, 4vw, 36px);
+    box-shadow: var(--shadow-lg);
+    object-fit: cover;
+    max-height: 420px;
+  }
+
+  .product-summary {
+    font-size: 1.05rem;
+    color: var(--color-muted);
+  }
+
+  .product-categories {
+    list-style: none;
+    display: flex;
+    gap: 0.75rem;
+    padding: 0;
+    margin: 1.25rem 0 1.75rem;
+  }
+
+  .product-categories li span {
+    display: inline-flex;
+    padding: 0.4rem 0.85rem;
+    border-radius: 999px;
+    background: rgba(13, 71, 161, 0.08);
+    color: var(--color-primary);
+    font-weight: 600;
+  }
+
+  .product-presentations {
+    display: grid;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .product-presentations select {
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    border: 1px solid var(--color-border);
+    font-family: inherit;
+  }
+
+  .presentation-note {
+    margin: 0;
+    color: var(--color-muted);
+  }
+
+  .product-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .product-description {
+    background: var(--color-surface);
+    padding-block: clamp(3rem, 6vw, 5rem);
+  }
+
+  .product-description p {
+    font-size: 1.05rem;
+    color: var(--color-muted);
+  }
+
+  .product-benefits {
+    list-style: disc;
+    padding-left: 1.5rem;
+    color: #0f172a;
+    display: grid;
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+
+  .related-products .carousel {
+    padding-top: 1rem;
+  }
+
+  .related-card {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .related-card img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    border-radius: var(--radius-md);
+  }
+
+  .related-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-top: auto;
+  }
+
+  @media (max-width: 800px) {
+    .product-categories {
+      flex-wrap: wrap;
+    }
+  }
+</style>
