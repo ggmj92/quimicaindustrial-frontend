@@ -337,7 +337,6 @@ const {
           if (payload) {
             upsertItem(payload);
             document.dispatchEvent(new CustomEvent("qi-cart-open"));
-            openCartOverlay();
           }
         }
 
@@ -350,12 +349,10 @@ const {
 
         if (openTrigger) {
           document.dispatchEvent(new CustomEvent("qi-cart-open"));
-          openCartOverlay();
         }
 
         if (closeTrigger) {
           document.dispatchEvent(new CustomEvent("qi-cart-close"));
-          closeCartOverlay();
         }
       });
 
@@ -381,6 +378,11 @@ const {
       document.addEventListener("DOMContentLoaded", () => {
         loadCart();
         dispatchCartChange();
+        // Ensure cart is closed on page load
+        const overlay = getCartOverlay();
+        if (overlay instanceof HTMLElement) {
+          overlay.hidden = true;
+        }
       });
     </script>
   </body>

@@ -182,6 +182,10 @@
   padding: clamp(1rem, 4vw, 3rem);
 }
 
+.cart-overlay[hidden] {
+  display: none !important;
+}
+
 .cart-drawer {
   width: min(420px, 100%);
   background: var(--color-surface);

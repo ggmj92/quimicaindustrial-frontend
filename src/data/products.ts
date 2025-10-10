@@ -17,11 +17,44 @@ export interface ProductCategory {
   wordpressId?: number;
 }
 
+export interface ProductImage {
+  id: number;
+  src: string;
+  name: string;
+  alt: string;
+  thumbnail: string;
+  srcset?: string;
+  sizes?: string;
+}
+
+export interface ProductDimensions {
+  length: string;
+  width: string;
+  height: string;
+}
+
+export interface ProductTag {
+  id: number;
+  name: string;
+  slug: string;
+}
+
+export interface ProductAttribute {
+  id: number;
+  name: string;
+  slug: string;
+  position: number;
+  visible: boolean;
+  variation: boolean;
+  options: string[];
+}
+
 export interface Product {
   id: string;
   name: string;
   slug: string;
   image: string;
+  images: ProductImage[];
   categories: string[];
   presentations: ProductPresentation[];
   summary: string;
@@ -37,6 +70,24 @@ export interface Product {
   stockStatus: string;
   stockQuantity: number | null;
   purchasable: boolean;
+  sku?: string;
+  weight?: string;
+  dimensions?: ProductDimensions;
+  tags: ProductTag[];
+  attributes: ProductAttribute[];
+  averageRating: number;
+  ratingCount: number;
+  totalSales: number;
+  onSale: boolean;
+  virtual: boolean;
+  downloadable: boolean;
+  externalUrl?: string;
+  buttonText?: string;
+  purchaseNote?: string;
+  reviewsAllowed: boolean;
+  upsellIds: number[];
+  crossSellIds: number[];
+  relatedIds: number[];
 }
 
 const DEFAULT_API_BASE = "https://test.insumosquimicos.pe/wp-json/wc/v3";
@@ -61,8 +112,17 @@ const AUTH_HEADER =
     : null;
 
 interface WooCommerceImage {
+  id: number;
+  date_created: string;
+  date_created_gmt: string;
+  date_modified: string;
+  date_modified_gmt: string;
   src: string;
-  alt?: string;
+  name: string;
+  alt: string;
+  srcset?: string;
+  sizes?: string;
+  thumbnail: string;
 }
 
 interface WooCommerceCategory {
@@ -77,9 +137,22 @@ interface WooCommerceAttribute {
   id: number;
   name: string;
   slug: string;
+  position: number;
   visible: boolean;
   variation: boolean;
   options: string[];
+}
+
+interface WooCommerceTag {
+  id: number;
+  name: string;
+  slug: string;
+}
+
+interface WooCommerceDimensions {
+  length: string;
+  width: string;
+  height: string;
 }
 
 interface WooCommerceMetaData {
@@ -92,23 +165,80 @@ interface WooCommerceProduct {
   id: number;
   name: string;
   slug: string;
+  permalink: string;
+  date_created: string;
+  date_created_gmt: string;
+  date_modified: string;
+  date_modified_gmt: string;
+  type: string;
+  status: string;
+  featured: boolean;
+  catalog_visibility: string;
   description: string;
   short_description: string;
-  date_created: string;
-  date_modified: string;
-  featured: boolean;
+  sku: string;
+  price: string;
+  regular_price: string;
+  sale_price: string;
+  date_on_sale_from: string | null;
+  date_on_sale_from_gmt: string | null;
+  date_on_sale_to: string | null;
+  date_on_sale_to_gmt: string | null;
+  on_sale: boolean;
+  purchasable: boolean;
   total_sales: number;
+  virtual: boolean;
+  downloadable: boolean;
+  downloads: any[];
+  download_limit: number;
+  download_expiry: number;
+  external_url: string;
+  button_text: string;
+  tax_status: string;
+  tax_class: string;
+  manage_stock: boolean;
+  stock_quantity: number | null;
+  backorders: string;
+  backorders_allowed: boolean;
+  backordered: boolean;
+  low_stock_amount: number | null;
+  sold_individually: boolean;
+  weight: string;
+  dimensions: WooCommerceDimensions;
+  shipping_required: boolean;
+  shipping_taxable: boolean;
+  shipping_class: string;
+  shipping_class_id: number;
+  reviews_allowed: boolean;
+  average_rating: string;
+  rating_count: number;
+  upsell_ids: number[];
+  cross_sell_ids: number[];
+  parent_id: number;
+  purchase_note: string;
   images: WooCommerceImage[];
   categories: WooCommerceCategory[];
+  brands: any[];
+  tags: WooCommerceTag[];
   attributes: WooCommerceAttribute[];
+  default_attributes: any[];
+  variations: number[];
+  grouped_products: any[];
+  menu_order: number;
+  price_html: string;
+  related_ids: number[];
   meta_data: WooCommerceMetaData[];
-  price?: string | null;
-  regular_price?: string | null;
-  sale_price?: string | null;
-  price_html?: string | null;
-  stock_status?: string | null;
-  stock_quantity?: number | null;
-  purchasable?: boolean;
+  stock_status: string;
+  has_options: boolean;
+  post_password: string;
+  global_unique_id: string;
+  jetpack_sharing_enabled: boolean;
+  google_listings_and_ads__channel_visibility: {
+    is_visible: boolean;
+    channel_visibility: string;
+    sync_status: string;
+    issues: any[];
+  };
 }
 
 interface WooCommerceCategoryResponse extends WooCommerceCategory {
@@ -367,6 +497,16 @@ function mapWooCommerceCategory(
 
 function mapWooCommerceProduct(product: WooCommerceProduct): Product {
   const image = product.images?.[0]?.src ?? PLACEHOLDER_IMAGE;
+  const images: ProductImage[] = (product.images ?? []).map((img) => ({
+    id: img.id,
+    src: img.src,
+    name: img.name,
+    alt: img.alt,
+    thumbnail: img.thumbnail,
+    srcset: img.srcset,
+    sizes: img.sizes,
+  }));
+
   const categories = Array.from(
     new Set(
       (product.categories ?? []).map((category) => {
@@ -416,11 +556,36 @@ function mapWooCommerceProduct(product: WooCommerceProduct): Product {
       : stockStatus === "instock" ||
         (stockQuantity != null && stockQuantity > 0);
 
+  const tags: ProductTag[] = (product.tags ?? []).map((tag) => ({
+    id: tag.id,
+    name: tag.name,
+    slug: tag.slug,
+  }));
+
+  const attributes: ProductAttribute[] = (product.attributes ?? []).map(
+    (attr) => ({
+      id: attr.id,
+      name: attr.name,
+      slug: attr.slug,
+      position: attr.position,
+      visible: attr.visible,
+      variation: attr.variation,
+      options: attr.options,
+    }),
+  );
+
+  const dimensions: ProductDimensions = {
+    length: product.dimensions?.length || "",
+    width: product.dimensions?.width || "",
+    height: product.dimensions?.height || "",
+  };
+
   return {
     id: String(product.id),
     name: product.name,
     slug: product.slug,
     image,
+    images,
     categories,
     presentations,
     summary,
@@ -436,6 +601,27 @@ function mapWooCommerceProduct(product: WooCommerceProduct): Product {
     stockStatus,
     stockQuantity,
     purchasable,
+    sku: product.sku || undefined,
+    weight: product.weight || undefined,
+    dimensions:
+      dimensions.length || dimensions.width || dimensions.height
+        ? dimensions
+        : undefined,
+    tags,
+    attributes,
+    averageRating: Number(product.average_rating) || 0,
+    ratingCount: product.rating_count || 0,
+    totalSales: product.total_sales || 0,
+    onSale: product.on_sale || false,
+    virtual: product.virtual || false,
+    downloadable: product.downloadable || false,
+    externalUrl: product.external_url || undefined,
+    buttonText: product.button_text || undefined,
+    purchaseNote: product.purchase_note || undefined,
+    reviewsAllowed: product.reviews_allowed || false,
+    upsellIds: product.upsell_ids || [],
+    crossSellIds: product.cross_sell_ids || [],
+    relatedIds: product.related_ids || [],
   };
 }
 

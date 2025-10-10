@@ -127,43 +127,6 @@ const navLinks = [
       });
     }
 
-    const cartToggle = document.querySelector("[data-cart-toggle]");
-    const cartOverlay = document.querySelector("[data-cart-overlay]");
-    const cartClose = document.querySelector("[data-cart-close]");
-
-    const openCart = () => {
-      if (cartOverlay) {
-        cartOverlay.hidden = false;
-        document.body.style.overflow = "hidden";
-        cartToggle?.setAttribute("aria-expanded", "true");
-      }
-    };
-
-    const closeCart = () => {
-      if (cartOverlay) {
-        cartOverlay.hidden = true;
-        document.body.style.overflow = "";
-        cartToggle?.setAttribute("aria-expanded", "false");
-      }
-    };
-
-    cartToggle?.addEventListener("click", () => {
-      if (cartOverlay?.hidden) {
-        openCart();
-      } else {
-        closeCart();
-      }
-    });
-
-    cartClose?.addEventListener("click", closeCart);
-
-    cartOverlay?.addEventListener("click", (event) => {
-      if (event.target === cartOverlay) {
-        closeCart();
-      }
-    });
-
-    document.addEventListener("qi-cart-open", openCart);
-    document.addEventListener("qi-cart-close", closeCart);
+    // Cart functionality is handled in Layout.astro to avoid conflicts
   });
 </script>
