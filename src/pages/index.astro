@@ -1,11 +1,648 @@
 ---
-import Welcome from "../components/Welcome.astro";
 import Layout from "../layouts/Layout.astro";
+import { getFeaturedProducts, getCategories } from "../data/products";
 
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+const featuredProducts = await getFeaturedProducts();
+const categories = await getCategories();
 ---
 
-<Layout>
-  <Welcome />
+<Layout
+  title="Química Industrial | Distribuidores de químicos en Lima"
+  description="Catálogo de materias primas y químicos industriales con logística inmediata en Lima y todo el Perú. Integra fácilmente con tu API de WordPress."
+  canonical="https://www.quimicaindustrial.pe/"
+>
+  <section class="hero" id="inicio">
+    <div class="container hero-grid">
+      <div class="hero-copy">
+        <span class="tag">Desde Lima hacia todo el Perú</span>
+        <h1>Químicos industriales listos para tu proceso productivo</h1>
+        <p>
+          Somos tu aliado en abastecimiento de materias primas con soporte
+          técnico, trazabilidad y entregas ágiles. Nuestro catálogo está listo
+          para conectarse con tu API de WordPress en cuanto la habilites.
+        </p>
+        <form class="hero-search" role="search">
+          <label class="sr-only" for="hero-search">Buscar producto</label>
+          <input
+            id="hero-search"
+            type="search"
+            placeholder="Busca por nombre, uso o categoría"
+          />
+          <button type="submit" class="btn btn-primary">Buscar</button>
+        </form>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="/products">Ver catálogo</a>
+          <button
+            class="btn btn-outline"
+            type="button"
+            data-action="open-cart"
+            aria-label="Abrir carrito de cotización"
+          >
+            Revisar carrito
+          </button>
+        </div>
+        <ul class="hero-stats">
+          <li>
+            <strong>+150</strong>
+            <span>Productos activos</span>
+          </li>
+          <li>
+            <strong>24h</strong>
+            <span>Entrega en Lima</span>
+          </li>
+          <li>
+            <strong>ISO</strong>
+            <span>Proveedores certificados</span>
+          </li>
+        </ul>
+      </div>
+      <div class="hero-media" aria-hidden="true">
+        <div class="hero-illustration">
+          <div class="bubble bubble-lg"></div>
+          <div class="bubble bubble-md"></div>
+          <div class="bubble bubble-sm"></div>
+          <img
+            src="https://images.unsplash.com/photo-1581092152835-30ab079f19b9?auto=format&fit=crop&w=900&q=80"
+            alt="Laboratorio químico"
+          />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="featured" id="destacados">
+    <div class="container">
+      <header class="section-header">
+        <div>
+          <span class="tag">Productos destacados</span>
+          <h2>Disponibles para entrega inmediata</h2>
+          <p>
+            Integramos fichas técnicas, hojas de seguridad y precios por volumen
+            directamente desde tu WordPress.
+          </p>
+        </div>
+        <a class="btn btn-outline" href="/products">Ver todos</a>
+      </header>
+      <div class="carousel">
+        {
+          featuredProducts.map((product) => {
+            const presentation = product.presentations[0];
+            return (
+              <article class="card carousel-item product-card">
+                <div class="product-image">
+                  <img
+                    src={product.image}
+                    alt={`Fotografía de ${product.name}`}
+                    loading="lazy"
+                  />
+                  <span class="badge badge-new">Nuevo</span>
+                </div>
+                <div class="product-body">
+                  <h3>{product.name}</h3>
+                  <p>{product.summary}</p>
+                  <ul class="product-tags">
+                    {product.heroHighlights.slice(0, 3).map((highlight) => (
+                      <li>{highlight}</li>
+                    ))}
+                  </ul>
+                </div>
+                <div class="product-footer">
+                  <a class="btn btn-outline" href={`/products/${product.slug}`}>
+                    Ver detalle
+                  </a>
+                  <button
+                    class="btn btn-primary"
+                    type="button"
+                    data-action="add-to-cart"
+                    data-product-id={product.id}
+                    data-product-name={product.name}
+                    data-product-slug={product.slug}
+                    data-product-presentation={presentation?.label || ""}
+                    data-presentation-id={presentation?.id || ""}
+                    data-product-image={product.image}
+                  >
+                    Añadir
+                  </button>
+                </div>
+              </article>
+            );
+          })
+        }
+      </div>
+    </div>
+  </section>
+
+  <section class="categories" id="categorias">
+    <div class="container">
+      <header class="section-header">
+        <div>
+          <span class="tag">Categorías</span>
+          <h2>Soluciones para cada industria</h2>
+          <p>
+            Cada categoría está preparada para conectarse a tu API y mostrar
+            disponibilidad en tiempo real.
+          </p>
+        </div>
+      </header>
+      <div class="carousel">
+        {
+          categories.map((category) => (
+            <article class="card carousel-item category-card">
+              <figure>
+                <img src={category.image} alt={category.name} loading="lazy" />
+              </figure>
+              <div class="category-body">
+                <h3>{category.name}</h3>
+                <p>{category.description}</p>
+                <span class="category-highlight">{category.heroHighlight}</span>
+              </div>
+              <a
+                class="category-link"
+                href={`/products?category=${category.id}`}
+              >
+                Explorar
+              </a>
+            </article>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <section class="about" id="nosotros">
+    <div class="container about-grid">
+      <div>
+        <span class="tag">Por qué elegirnos</span>
+        <h2>Distribuimos confianza química con soporte técnico</h2>
+        <p>
+          Ofrecemos asesoría personalizada, logística refrigerada o a
+          temperatura controlada y documentación digital para auditorías.
+          Integramos sistemas ERP y e-commerce mediante APIs y automatizaciones.
+        </p>
+        <ul class="about-list">
+          <li>
+            <strong>Supply chain seguro:</strong> proveedores certificados ISO 9001,
+            14001 y 45001.
+          </li>
+          <li>
+            <strong>Logística a medida:</strong> despacho propio en Lima y operadores
+            aliados en todo el Perú.
+          </li>
+          <li>
+            <strong>Digital desde el origen:</strong> catálogos listos para conectarse
+            a WordPress y CRMs.
+          </li>
+        </ul>
+      </div>
+      <div class="about-metrics">
+        <article>
+          <h3>+12 años</h3>
+          <p>Atendiendo a industrias alimentarias, farmacéuticas y mineras.</p>
+        </article>
+        <article>
+          <h3>Laboratorio aliado</h3>
+          <p>
+            Ensayos de calidad y re-etiquetado con lote y fecha de vencimiento.
+          </p>
+        </article>
+        <article>
+          <h3>Equipo técnico</h3>
+          <p>Ingenieros químicos para capacitar a tu personal en seguridad.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="contact-preview" id="contacto">
+    <div class="container contact-grid">
+      <div>
+        <span class="tag">Hablemos</span>
+        <h2>Prepara tu integración hoy</h2>
+        <p>
+          Agenda una llamada o envíanos tu requerimiento. Podemos conectar
+          nuestro catálogo a tu WordPress en cuanto tengas acceso al API.
+        </p>
+        <ul class="contact-list">
+          <li>
+            <strong>Teléfono:</strong>
+            <a href="tel:+51987654321">+51 987 654 321</a>
+          </li>
+          <li>
+            <strong>Email:</strong>
+            <a href="mailto:ventas@quimicaindustrial.pe"
+              >ventas@quimicaindustrial.pe</a
+            >
+          </li>
+          <li>
+            <strong>Horario:</strong> Lunes a viernes de 8:00 a 18:00
+          </li>
+        </ul>
+      </div>
+      <form class="contact-form">
+        <h3>Escríbenos</h3>
+        <label>
+          Nombre y empresa
+          <input
+            type="text"
+            name="name"
+            placeholder="María Pérez - Planta Textil"
+            required
+          />
+        </label>
+        <label>
+          Correo electrónico
+          <input
+            type="email"
+            name="email"
+            placeholder="tucorreo@empresa.com"
+            required
+          />
+        </label>
+        <label>
+          ¿Qué necesitas?
+          <textarea
+            name="message"
+            rows="4"
+            placeholder="Indica productos, presentaciones o volúmenes"
+          ></textarea>
+        </label>
+        <button type="submit" class="btn btn-primary">Enviar mensaje</button>
+      </form>
+    </div>
+  </section>
 </Layout>
+
+<style>
+  .hero {
+    background:
+      radial-gradient(
+        circle at top left,
+        rgba(13, 71, 161, 0.12),
+        transparent 55%
+      ),
+      radial-gradient(
+        circle at bottom right,
+        rgba(0, 172, 193, 0.1),
+        transparent 45%
+      );
+  }
+
+  .hero-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: clamp(2rem, 6vw, 4rem);
+    align-items: center;
+  }
+
+  .hero-copy h1 {
+    font-size: clamp(2.4rem, 5vw, 3.3rem);
+    margin-bottom: 1rem;
+  }
+
+  .hero-copy p {
+    font-size: 1.05rem;
+    color: var(--color-muted);
+    max-width: 45ch;
+  }
+
+  .hero-search {
+    display: flex;
+    gap: 0.75rem;
+    background: var(--color-surface);
+    padding: 0.5rem 0.5rem 0.5rem 1rem;
+    border-radius: 999px;
+    margin-block: 1.75rem 1.25rem;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .hero-search input {
+    flex: 1;
+    border: none;
+    font-size: 1rem;
+    background: transparent;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .hero-stats {
+    display: flex;
+    gap: 1.5rem;
+    padding: 0;
+    margin: 2.5rem 0 0;
+    list-style: none;
+  }
+
+  .hero-stats li {
+    background: var(--color-surface);
+    padding: 1rem 1.25rem;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .hero-stats strong {
+    font-size: 1.5rem;
+    display: block;
+  }
+
+  .hero-media {
+    position: relative;
+    display: grid;
+    place-items: center;
+  }
+
+  .hero-illustration {
+    position: relative;
+    width: min(480px, 90%);
+    aspect-ratio: 4 / 5;
+    border-radius: clamp(24px, 5vw, 36px);
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+  }
+
+  .hero-illustration img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .bubble {
+    position: absolute;
+    border-radius: 50%;
+    background: radial-gradient(
+      circle,
+      rgba(13, 71, 161, 0.25),
+      transparent 70%
+    );
+    filter: blur(0.5px);
+    mix-blend-mode: screen;
+  }
+
+  .bubble-lg {
+    width: 220px;
+    height: 220px;
+    top: -60px;
+    right: -60px;
+  }
+
+  .bubble-md {
+    width: 160px;
+    height: 160px;
+    bottom: -60px;
+    left: -40px;
+    background: radial-gradient(
+      circle,
+      rgba(0, 172, 193, 0.35),
+      transparent 70%
+    );
+  }
+
+  .bubble-sm {
+    width: 120px;
+    height: 120px;
+    bottom: 30%;
+    right: -40px;
+    background: radial-gradient(
+      circle,
+      rgba(245, 158, 11, 0.35),
+      transparent 70%
+    );
+  }
+
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .section-header h2 {
+    margin-bottom: 0.5rem;
+  }
+
+  .product-card {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .product-image {
+    position: relative;
+  }
+
+  .product-image img {
+    border-radius: var(--radius-md);
+    height: 180px;
+    width: 100%;
+    object-fit: cover;
+  }
+
+  .product-image .badge {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+  }
+
+  .product-body h3 {
+    margin: 0 0 0.5rem;
+  }
+
+  .product-body p {
+    color: var(--color-muted);
+    margin: 0 0 1rem;
+  }
+
+  .product-tags {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0;
+    margin: 0;
+  }
+
+  .product-tags li {
+    background: rgba(13, 71, 161, 0.08);
+    color: var(--color-primary);
+    padding: 0.35rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  .product-footer {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-top: auto;
+  }
+
+  .category-card {
+    display: grid;
+    gap: 1rem;
+    padding: 0;
+  }
+
+  .category-card figure {
+    margin: 0;
+  }
+
+  .category-card img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    border-radius: var(--radius-md);
+  }
+
+  .category-body {
+    padding-inline: 1.5rem;
+  }
+
+  .category-body h3 {
+    margin: 0 0 0.5rem;
+  }
+
+  .category-body p {
+    margin: 0 0 1rem;
+    color: var(--color-muted);
+  }
+
+  .category-highlight {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    color: var(--color-primary);
+    font-weight: 600;
+  }
+
+  .category-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--color-border);
+    color: var(--color-primary);
+    font-weight: 600;
+  }
+
+  .about-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2.5rem;
+    align-items: start;
+  }
+
+  .about-list {
+    list-style: none;
+    padding: 0;
+    margin: 1.5rem 0 0;
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .about-list li {
+    background: var(--color-surface);
+    padding: 0.85rem 1.1rem;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    color: var(--color-muted);
+  }
+
+  .about-list strong {
+    color: #0f172a;
+  }
+
+  .about-metrics {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .about-metrics article {
+    background: linear-gradient(
+      135deg,
+      rgba(13, 71, 161, 0.1),
+      rgba(0, 172, 193, 0.1)
+    );
+    padding: 1.5rem;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .about-metrics h3 {
+    margin: 0 0 0.5rem;
+  }
+
+  .contact-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+  }
+
+  .contact-list {
+    list-style: none;
+    padding: 0;
+    margin: 1.5rem 0 0;
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .contact-form {
+    background: var(--color-surface);
+    padding: 2rem;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    display: grid;
+    gap: 1rem;
+  }
+
+  .contact-form label {
+    display: grid;
+    gap: 0.35rem;
+    font-weight: 600;
+    color: #0f172a;
+  }
+
+  .contact-form input,
+  .contact-form textarea {
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    border: 1px solid var(--color-border);
+    font-family: inherit;
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+  }
+
+  @media (max-width: 800px) {
+    .hero-search {
+      flex-direction: column;
+      padding: 1rem;
+      border-radius: 24px;
+    }
+
+    .hero-actions {
+      justify-content: flex-start;
+    }
+
+    .hero-stats {
+      flex-wrap: wrap;
+    }
+
+    .product-image img,
+    .category-card img {
+      height: 200px;
+    }
+  }
+</style>
