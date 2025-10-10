@@ -1,0 +1,169 @@
+---
+import "../styles/components/header.css";
+
+const navLinks = [
+  { href: "/", label: "Inicio" },
+  { href: "/products", label: "Productos" },
+  { href: "/contacto", label: "Contacto" },
+  { href: "/cotizacion", label: "Solicita tu cotización" },
+];
+---
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="/">
+      <span class="brand-mark">QI</span>
+      <div class="brand-copy">
+        <span class="brand-title">Química Industrial</span>
+        <span class="brand-subtitle">Distribución de químicos en Lima</span>
+      </div>
+    </a>
+
+    <button
+      class="menu-toggle"
+      type="button"
+      aria-label="Abrir menú"
+      data-menu-toggle
+    >
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+
+    <nav class="site-nav" data-site-nav>
+      <ul>
+        {
+          navLinks.map((link) => (
+            <li>
+              <a href={link.href}>{link.label}</a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <div class="header-actions">
+      <a class="btn btn-outline quote-btn" href="/cotizacion">Cotizar ahora</a>
+      <button
+        class="cart-button"
+        type="button"
+        data-cart-toggle
+        aria-haspopup="dialog"
+        aria-expanded="false"
+      >
+        <span class="cart-icon" aria-hidden="true">
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M3 3h1.6a1 1 0 0 1 .98.8l.66 3.3M7 14h11.18a1 1 0 0 0 .98-.8l1.13-5.63a1 1 0 0 0-.98-1.2H6.24"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+              stroke-linejoin="round"></path>
+            <circle cx="9" cy="19" r="1" fill="currentColor"></circle>
+            <circle cx="18" cy="19" r="1" fill="currentColor"></circle>
+          </svg>
+        </span>
+        <span>Carrito</span>
+        <span class="cart-count" data-cart-count>0</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="cart-overlay" data-cart-overlay hidden>
+  <div
+    class="cart-drawer"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="cart-title"
+  >
+    <div class="cart-header">
+      <h2 id="cart-title">Carrito de cotización</h2>
+      <button
+        type="button"
+        class="close-button"
+        data-cart-close
+        aria-label="Cerrar carrito">×</button
+      >
+    </div>
+    <div class="cart-body">
+      <p class="cart-empty" data-cart-empty>
+        No hay productos en tu carrito todavía.
+      </p>
+      <ul class="cart-items" data-cart-items></ul>
+    </div>
+    <div class="cart-footer">
+      <a class="btn btn-primary" href="/cotizacion">Ir a cotización</a>
+    </div>
+  </div>
+</div>
+
+<script is:inline>
+  document.addEventListener("DOMContentLoaded", () => {
+    const toggle = document.querySelector("[data-menu-toggle]");
+    const nav = document.querySelector("[data-site-nav]");
+
+    if (toggle && nav) {
+      toggle.addEventListener("click", () => {
+        const expanded = toggle.getAttribute("aria-expanded") === "true";
+        toggle.setAttribute("aria-expanded", expanded ? "false" : "true");
+        nav.dataset.open = expanded ? "false" : "true";
+        if (!expanded) {
+          nav.querySelector("a")?.focus();
+        }
+      });
+
+      nav.querySelectorAll("a").forEach((link) => {
+        link.addEventListener("click", () => {
+          toggle.setAttribute("aria-expanded", "false");
+          nav.dataset.open = "false";
+        });
+      });
+    }
+
+    const cartToggle = document.querySelector("[data-cart-toggle]");
+    const cartOverlay = document.querySelector("[data-cart-overlay]");
+    const cartClose = document.querySelector("[data-cart-close]");
+
+    const openCart = () => {
+      if (cartOverlay) {
+        cartOverlay.hidden = false;
+        document.body.style.overflow = "hidden";
+        cartToggle?.setAttribute("aria-expanded", "true");
+      }
+    };
+
+    const closeCart = () => {
+      if (cartOverlay) {
+        cartOverlay.hidden = true;
+        document.body.style.overflow = "";
+        cartToggle?.setAttribute("aria-expanded", "false");
+      }
+    };
+
+    cartToggle?.addEventListener("click", () => {
+      if (cartOverlay?.hidden) {
+        openCart();
+      } else {
+        closeCart();
+      }
+    });
+
+    cartClose?.addEventListener("click", closeCart);
+
+    cartOverlay?.addEventListener("click", (event) => {
+      if (event.target === cartOverlay) {
+        closeCart();
+      }
+    });
+
+    document.addEventListener("qi-cart-open", openCart);
+    document.addEventListener("qi-cart-close", closeCart);
+  });
+</script>

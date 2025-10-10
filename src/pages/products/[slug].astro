@@ -1,0 +1,279 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import "../../styles/pages/product-detail.css";
+import {
+  getProducts,
+  getCategories,
+  getRelatedProducts,
+} from "../../data/products";
+import type { Product } from "../../data/products";
+
+export async function getStaticPaths() {
+  const products = await getProducts();
+  return products.map((product) => ({
+    params: { slug: product.slug },
+    props: { product },
+  }));
+}
+
+interface Props {
+  product: Product;
+}
+
+const { product } = Astro.props as Props;
+const categories = await getCategories();
+const productCategories = product.categories
+  .map((categoryId) =>
+    categories.find((category) => category.id === categoryId),
+  )
+  .filter(Boolean);
+const relatedProducts = (await getRelatedProducts(product.slug)).filter(
+  (item) => item.slug !== product.slug,
+);
+
+const STOCK_LABELS = {
+  instock: "En stock",
+  outofstock: "Agotado",
+  onbackorder: "Disponible bajo pedido",
+} as const;
+
+const getStockLabel = (status: string) =>
+  STOCK_LABELS[status as keyof typeof STOCK_LABELS] ??
+  "Consultar disponibilidad";
+
+const getStockClass = (status: string) => {
+  switch (status) {
+    case "instock":
+      return "is-available";
+    case "onbackorder":
+      return "is-backorder";
+    case "outofstock":
+      return "is-unavailable";
+    default:
+      return "is-unknown";
+  }
+};
+
+const priceText = product.priceText ?? "Consultar precio";
+const stockLabel = getStockLabel(product.stockStatus);
+const stockClass = getStockClass(product.stockStatus);
+---
+
+<Layout
+  title={`${product.name} | Química Industrial`}
+  description={product.summary}
+  canonical={`https://www.quimicaindustrial.pe/products/${product.slug}`}
+>
+  <section class="product-detail">
+    <div class="container product-hero">
+      <div class="product-media">
+        {
+          product.image ? (
+            <img
+              src={product.image}
+              alt={`Fotografía de ${product.name}`}
+              loading="lazy"
+            />
+          ) : (
+            <div class="image-fallback" aria-hidden="true" />
+          )
+        }
+      </div>
+      <div class="product-info">
+        <span class="tag">Ficha técnica</span>
+        <h1>{product.name}</h1>
+        {product.summary && <p class="product-summary">{product.summary}</p>}
+        <div class="product-pricing detail-pricing">
+          <span class="price">{priceText}</span>
+          <span class={`stock ${stockClass}`}>{stockLabel}</span>
+        </div>
+        {
+          productCategories.length > 0 && (
+            <ul class="product-categories">
+              {productCategories.map((category) => (
+                <li>
+                  <span>{category?.name ?? "Categoría"}</span>
+                </li>
+              ))}
+            </ul>
+          )
+        }
+
+        <div class="product-presentations">
+          <label for="presentations">Presentaciones disponibles</label>
+          <select id="presentations" data-product-select>
+            {
+              product.presentations.map((presentation) => (
+                <option
+                  value={presentation.id}
+                  data-label={presentation.label}
+                  data-minimum-order={presentation.minimumOrder || ""}
+                >
+                  {presentation.label}
+                  {presentation.minimumOrder &&
+                    ` (mínimo ${presentation.minimumOrder})`}
+                </option>
+              ))
+            }
+          </select>
+          {
+            product.presentations.map(
+              (presentation) =>
+                presentation.minimumOrder && (
+                  <p
+                    class="presentation-note"
+                    data-presentation-note={presentation.id}
+                    hidden
+                  >
+                    Pedido mínimo: {presentation.minimumOrder}
+                  </p>
+                ),
+            )
+          }
+        </div>
+
+        <div class="product-actions">
+          <button
+            class="btn btn-primary"
+            type="button"
+            data-action="add-to-cart"
+            data-product-id={product.id}
+            data-product-name={product.name}
+            data-product-slug={product.slug}
+            data-product-image={product.image}
+            data-product-presentation={product.presentations[0]?.label || ""}
+            data-presentation-id={product.presentations[0]?.id || ""}
+            data-product-price={product.price ?? ""}
+            data-product-price-text={product.priceText ?? ""}
+            data-product-stock-status={product.stockStatus}
+          >
+            Añadir al carrito de cotización
+          </button>
+          <a class="btn btn-outline" href="/cotizacion">Solicitar cotización</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="product-description">
+    <div class="container">
+      <h2>Descripción</h2>
+      {
+        product.description ? (
+          <p>{product.description}</p>
+        ) : (
+          <p class="muted">No contamos con una descripción detallada.</p>
+        )
+      }
+      {
+        product.heroHighlights.length > 0 && (
+          <>
+            <h3>Beneficios y soporte</h3>
+            <ul class="product-benefits">
+              {product.heroHighlights.map((highlight) => (
+                <li>{highlight}</li>
+              ))}
+            </ul>
+          </>
+        )
+      }
+    </div>
+  </section>
+
+  <section class="related-products">
+    <div class="container">
+      <header class="section-header">
+        <div>
+          <span class="tag">También te puede interesar</span>
+          <h2>Productos relacionados</h2>
+        </div>
+      </header>
+      {
+        relatedProducts.length ? (
+          <div class="carousel">
+            {relatedProducts.map((item) => {
+              const presentation = item.presentations[0];
+              return (
+                <article class="card carousel-item related-card">
+                  {item.image ? (
+                    <img
+                      src={item.image}
+                      alt={`Producto ${item.name}`}
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div class="image-fallback" aria-hidden="true" />
+                  )}
+                  <div class="related-body">
+                    <h3>{item.name}</h3>
+                    {item.summary && <p>{item.summary}</p>}
+                    <div class="product-pricing">
+                      <span class="price">{getPriceText(item)}</span>
+                      <span class={`stock ${getStockClass(item.stockStatus)}`}>
+                        {getStockLabel(item.stockStatus)}
+                      </span>
+                    </div>
+                  </div>
+                  <div class="related-actions">
+                    <a class="btn btn-outline" href={`/products/${item.slug}`}>
+                      Ver detalle
+                    </a>
+                    <button
+                      class="btn btn-primary"
+                      type="button"
+                      data-action="add-to-cart"
+                      data-product-id={item.id}
+                      data-product-name={item.name}
+                      data-product-slug={item.slug}
+                      data-product-presentation={presentation?.label || ""}
+                      data-presentation-id={presentation?.id || ""}
+                      data-product-image={item.image}
+                      data-product-price={item.price ?? ""}
+                      data-product-price-text={item.priceText ?? ""}
+                      data-product-stock-status={item.stockStatus}
+                    >
+                      Agregar
+                    </button>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        ) : (
+          <p class="muted">No encontramos productos relacionados.</p>
+        )
+      }
+    </div>
+  </section>
+</Layout>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const select = document.querySelector("[data-product-select]");
+    const notes = document.querySelectorAll("[data-presentation-note]");
+    const button = document.querySelector(
+      '.product-actions [data-action="add-to-cart"]',
+    );
+
+    const updateFromSelect = () => {
+      if (
+        !(select instanceof HTMLSelectElement) ||
+        !(button instanceof HTMLElement)
+      )
+        return;
+      const selected = select.selectedOptions[0];
+      const label = selected?.dataset.label ?? "";
+      button.setAttribute("data-product-presentation", label);
+      button.setAttribute("data-presentation-id", selected?.value || "");
+      notes.forEach((note) => {
+        const shouldHide =
+          !selected ||
+          note.getAttribute("data-presentation-note") !== selected.value;
+        note.toggleAttribute("hidden", shouldHide);
+      });
+    };
+
+    select?.addEventListener("change", updateFromSelect);
+    updateFromSelect();
+  });
+</script>

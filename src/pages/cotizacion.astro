@@ -1,0 +1,158 @@
+---
+import Layout from "../layouts/Layout.astro";
+import "../styles/pages/quote.css";
+import { getProducts } from "../data/products";
+
+const products = await getProducts();
+const serializedProducts = JSON.stringify(products);
+---
+
+<Layout
+  title="Carrito de cotización | Química Industrial"
+  description="Revisa los productos añadidos a tu cotización, ajusta cantidades y envíanos tus datos de contacto para preparar una propuesta personalizada."
+  canonical="https://www.quimicaindustrial.pe/cotizacion"
+>
+  <section class="quote">
+    <div class="container quote-layout">
+      <div class="quote-summary">
+        <span class="tag">Tu selección</span>
+        <h1>Carrito de cotización</h1>
+        <p>
+          Ajusta cantidades, elimina productos o añade nuevos ítems antes de
+          enviar tu solicitud. Los datos se sincronizan con WooCommerce para que
+          tu WordPress se mantenga actualizado.
+        </p>
+        <div class="quote-totals">
+          <strong data-quote-total-items>0</strong>
+          <span>productos en la cotización</span>
+        </div>
+        <div class="quote-add">
+          <label for="quote-product">Añadir otro producto</label>
+          <div class="quote-add-control">
+            <select id="quote-product" data-quote-selector>
+              <option value="">Selecciona un producto</option>
+              {
+                products.map((product) => (
+                  <option value={product.id} data-slug={product.slug}>
+                    {product.name}
+                  </option>
+                ))
+              }
+            </select>
+            <button type="button" class="btn btn-outline" data-quote-add
+              >Agregar</button
+            >
+          </div>
+        </div>
+        <div data-quote-items></div>
+      </div>
+
+      <form class="quote-form" data-quote-form>
+        <h2>Datos de contacto</h2>
+        <label>
+          Nombre completo
+          <input
+            type="text"
+            name="name"
+            placeholder="Nombre y apellido"
+            required
+          />
+        </label>
+        <label>
+          Empresa
+          <input
+            type="text"
+            name="company"
+            placeholder="Nombre de la empresa"
+          />
+        </label>
+        <label>
+          Correo electrónico
+          <input
+            type="email"
+            name="email"
+            placeholder="correo@empresa.com"
+            required
+          />
+        </label>
+        <label>
+          Teléfono
+          <input type="tel" name="phone" placeholder="+51 999 999 999" />
+        </label>
+        <label>
+          Comentarios adicionales
+          <textarea
+            name="message"
+            rows="4"
+            placeholder="Indica volúmenes, condiciones de entrega u otros detalles"
+          ></textarea>
+        </label>
+        <button type="submit" class="btn btn-primary">Enviar solicitud</button>
+        <p class="quote-feedback" data-quote-feedback hidden>
+          ¡Gracias! Hemos recibido tu solicitud. Nos comunicaremos contigo en
+          las próximas horas.
+        </p>
+      </form>
+    </div>
+  </section>
+
+  <script
+    type="application/json"
+    id="quote-catalog-data"
+    set:html={serializedProducts}
+  />
+</Layout>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const catalogScript = document.getElementById("quote-catalog-data");
+    let catalog = [];
+    if (catalogScript?.textContent) {
+      try {
+        catalog = JSON.parse(catalogScript.textContent);
+      } catch (error) {
+        console.warn("No se pudo leer el catálogo", error);
+      }
+    }
+
+    const selector = document.querySelector("[data-quote-selector]");
+    const addButton = document.querySelector("[data-quote-add]");
+    const form = document.querySelector("[data-quote-form]");
+    const feedback = document.querySelector("[data-quote-feedback]");
+
+    addButton?.addEventListener("click", () => {
+      if (!(selector instanceof HTMLSelectElement) || !selector.value) return;
+      const product = catalog.find((item) => item.id === selector.value);
+      if (!product) return;
+      const presentation = product.presentations[0];
+      const payload = {
+        productId: product.id,
+        presentationId: presentation?.id || "",
+        name: product.name,
+        presentation: presentation?.label || "",
+        image: product.image,
+        slug: product.slug,
+        quantity: 1,
+        price: product.price ?? "",
+        priceText: product.priceText ?? "",
+        stockStatus: product.stockStatus,
+      };
+      if (window.qiCart?.add) {
+        window.qiCart.add(payload);
+        document.dispatchEvent(new CustomEvent("qi-cart-open"));
+      }
+      selector.value = "";
+    });
+
+    form?.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const items = window.qiCart?.getItems ? window.qiCart.getItems() : [];
+      if (!items.length) {
+        alert("Agrega al menos un producto antes de enviar la cotización.");
+        return;
+      }
+      feedback?.removeAttribute("hidden");
+      form.reset();
+    });
+  });
+</script>

@@ -1,11 +1,380 @@
 ---
-import Welcome from "../components/Welcome.astro";
 import Layout from "../layouts/Layout.astro";
+import "../styles/pages/home.css";
+import {
+  getFeaturedProducts,
+  getCategories,
+  getProducts,
+} from "../data/products";
+import type { Product } from "../data/products";
 
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+const featuredProducts = await getFeaturedProducts();
+const categories = await getCategories();
+const products = await getProducts();
+const heroProduct = featuredProducts[0] ?? products[0] ?? null;
+const presentationCount = new Set(
+  products.flatMap((product) =>
+    product.presentations.map((item) => item.label),
+  ),
+).size;
+
+const STOCK_LABELS = {
+  instock: "En stock",
+  outofstock: "Agotado",
+  onbackorder: "Disponible bajo pedido",
+} as const;
+
+const getStockLabel = (status: string) =>
+  STOCK_LABELS[status as keyof typeof STOCK_LABELS] ??
+  "Consultar disponibilidad";
+
+const getStockClass = (status: string) => {
+  switch (status) {
+    case "instock":
+      return "is-available";
+    case "onbackorder":
+      return "is-backorder";
+    case "outofstock":
+      return "is-unavailable";
+    default:
+      return "is-unknown";
+  }
+};
+
+const getPriceText = (product: Product) =>
+  product.priceText ?? "Consultar precio";
 ---
 
-<Layout>
-  <Welcome />
+<Layout
+  title="Química Industrial | Distribuidores de químicos en Lima"
+  description="Catálogo de materias primas y químicos industriales con logística inmediata en Lima y todo el Perú. Integra fácilmente con tu API de WordPress."
+  canonical="https://www.quimicaindustrial.pe/"
+>
+  <section class="hero" id="inicio">
+    <div class="container hero-grid">
+      <div class="hero-copy">
+        <span class="tag">Desde Lima hacia todo el Perú</span>
+        <h1>Químicos industriales listos para tu proceso productivo</h1>
+        <p>
+          Somos tu aliado en abastecimiento de materias primas con soporte
+          técnico, trazabilidad y entregas ágiles. Nuestro catálogo muestra
+          {products.length} productos activos agrupados en {categories.length}
+          {" "}
+          {categories.length === 1 ? "categoría" : "categorías"} y
+          {" "}
+          {presentationCount}
+          {" "}
+          {
+            presentationCount === 1
+              ? "presentación disponible"
+              : "presentaciones disponibles"
+          }
+          , listos para cotizar con tu equipo.
+        </p>
+        <form class="hero-search" role="search">
+          <label class="sr-only" for="hero-search">Buscar producto</label>
+          <input
+            id="hero-search"
+            type="search"
+            placeholder="Busca por nombre, uso o categoría"
+          />
+          <button type="submit" class="btn btn-primary">Buscar</button>
+        </form>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="/products">Ver catálogo</a>
+          <button
+            class="btn btn-outline"
+            type="button"
+            data-action="open-cart"
+            aria-label="Abrir carrito de cotización"
+          >
+            Revisar carrito
+          </button>
+        </div>
+        <ul class="hero-stats">
+          <li>
+            <strong>{products.length}</strong>
+            <span>Productos activos</span>
+          </li>
+          <li>
+            <strong>{categories.length}</strong>
+            <span>
+              {
+                categories.length === 1
+                  ? "Categoría disponible"
+                  : "Categorías disponibles"
+              }
+            </span>
+          </li>
+          <li>
+            <strong>{presentationCount || "-"}</strong>
+            <span>
+              {
+                presentationCount === 1
+                  ? "Presentación disponible"
+                  : "Presentaciones"
+              }
+            </span>
+          </li>
+        </ul>
+      </div>
+      <div class="hero-media" aria-hidden="true">
+        <div class="hero-illustration">
+          <div class="bubble bubble-lg"></div>
+          <div class="bubble bubble-md"></div>
+          <div class="bubble bubble-sm"></div>
+          <img
+            src={heroProduct?.image ?? "/images/placeholder.svg"}
+            alt={heroProduct
+              ? `Imagen del producto ${heroProduct.name}`
+              : "Ilustración del catálogo de Química Industrial"}
+          />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="featured" id="destacados">
+    <div class="container">
+      <header class="section-header">
+        <div>
+          <span class="tag">Productos destacados</span>
+          <h2>Disponibles para entrega inmediata</h2>
+          <p>
+            Los productos destacados se obtienen en tiempo real desde
+            WooCommerce, listos para cotizar con nuestro equipo comercial.
+          </p>
+        </div>
+        <a class="btn btn-outline" href="/products">Ver todos</a>
+      </header>
+      {
+        featuredProducts.length ? (
+          <div class="carousel">
+            {featuredProducts.map((product) => {
+              const presentation = product.presentations[0];
+              const highlights = product.heroHighlights.slice(0, 3);
+              return (
+                <article class="card carousel-item product-card">
+                  <div class="product-image">
+                    {product.image ? (
+                      <img
+                        src={product.image}
+                        alt={`Fotografía de ${product.name}`}
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div class="image-fallback" aria-hidden="true" />
+                    )}
+                    {product.featured && (
+                      <span class="badge badge-new">Destacado</span>
+                    )}
+                  </div>
+                  <div class="product-body">
+                    <h3>{product.name}</h3>
+                    {product.summary && <p>{product.summary}</p>}
+                    <div class="product-pricing">
+                      <span class="price">{getPriceText(product)}</span>
+                      <span
+                        class={`stock ${getStockClass(product.stockStatus)}`}
+                      >
+                        {getStockLabel(product.stockStatus)}
+                      </span>
+                    </div>
+                    {highlights.length > 0 && (
+                      <ul class="product-tags">
+                        {highlights.map((highlight) => (
+                          <li>{highlight}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                  <div class="product-footer">
+                    <a
+                      class="btn btn-outline"
+                      href={`/products/${product.slug}`}
+                    >
+                      Ver detalle
+                    </a>
+                    <button
+                      class="btn btn-primary"
+                      type="button"
+                      data-action="add-to-cart"
+                      data-product-id={product.id}
+                      data-product-name={product.name}
+                      data-product-slug={product.slug}
+                      data-product-presentation={presentation?.label || ""}
+                      data-presentation-id={presentation?.id || ""}
+                      data-product-image={product.image}
+                      data-product-price={product.price ?? ""}
+                      data-product-price-text={product.priceText ?? ""}
+                      data-product-stock-status={product.stockStatus}
+                    >
+                      Añadir
+                    </button>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        ) : (
+          <p class="empty-state">No hay productos destacados por ahora.</p>
+        )
+      }
+    </div>
+  </section>
+
+  <section class="categories" id="categorias">
+    <div class="container">
+      <header class="section-header">
+        <div>
+          <span class="tag">Categorías</span>
+          <h2>Soluciones para cada industria</h2>
+          <p>
+            Cada categoría está preparada para conectarse a tu API y mostrar
+            disponibilidad en tiempo real.
+          </p>
+        </div>
+      </header>
+      {
+        categories.length ? (
+          <div class="carousel">
+            {categories.map((category) => (
+              <article class="card carousel-item category-card">
+                <figure>
+                  {category.image ? (
+                    <img
+                      src={category.image}
+                      alt={category.name}
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div class="image-fallback" aria-hidden="true" />
+                  )}
+                </figure>
+                <div class="category-body">
+                  <h3>{category.name}</h3>
+                  {category.description && <p>{category.description}</p>}
+                  {category.heroHighlight && (
+                    <span class="category-highlight">
+                      {category.heroHighlight}
+                    </span>
+                  )}
+                </div>
+                <a
+                  class="category-link"
+                  href={`/products?category=${category.id}`}
+                >
+                  Explorar
+                </a>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <p class="empty-state">Aún no hay categorías disponibles.</p>
+        )
+      }
+    </div>
+  </section>
+
+  <section class="about" id="nosotros">
+    <div class="container about-grid">
+      <div>
+        <span class="tag">Por qué elegirnos</span>
+        <h2>Distribuimos confianza química con soporte técnico</h2>
+        <p>
+          Ofrecemos asesoría personalizada, logística refrigerada o a
+          temperatura controlada y documentación digital para auditorías.
+          Integramos sistemas ERP y e-commerce mediante APIs y automatizaciones.
+        </p>
+        <ul class="about-list">
+          <li>
+            <strong>Supply chain seguro:</strong> proveedores certificados ISO 9001,
+            14001 y 45001.
+          </li>
+          <li>
+            <strong>Logística a medida:</strong> despacho propio en Lima y operadores
+            aliados en todo el Perú.
+          </li>
+          <li>
+            <strong>Digital desde el origen:</strong> catálogos listos para conectarse
+            a WordPress y CRMs.
+          </li>
+        </ul>
+      </div>
+      <div class="about-metrics">
+        <article>
+          <h3>+12 años</h3>
+          <p>Atendiendo a industrias alimentarias, farmacéuticas y mineras.</p>
+        </article>
+        <article>
+          <h3>Laboratorio aliado</h3>
+          <p>
+            Ensayos de calidad y re-etiquetado con lote y fecha de vencimiento.
+          </p>
+        </article>
+        <article>
+          <h3>Equipo técnico</h3>
+          <p>Ingenieros químicos para capacitar a tu personal en seguridad.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="contact-preview" id="contacto">
+    <div class="container contact-grid">
+      <div>
+        <span class="tag">Hablemos</span>
+        <h2>Prepara tu integración hoy</h2>
+        <p>
+          Agenda una llamada o envíanos tu requerimiento. Podemos conectar
+          nuestro catálogo a tu WordPress en cuanto tengas acceso al API.
+        </p>
+        <ul class="contact-list">
+          <li>
+            <strong>Teléfono:</strong>
+            <a href="tel:+51987654321">+51 987 654 321</a>
+          </li>
+          <li>
+            <strong>Email:</strong>
+            <a href="mailto:ventas@quimicaindustrial.pe"
+              >ventas@quimicaindustrial.pe</a
+            >
+          </li>
+          <li>
+            <strong>Horario:</strong> Lunes a viernes de 8:00 a 18:00
+          </li>
+        </ul>
+      </div>
+      <form class="contact-form">
+        <h3>Escríbenos</h3>
+        <label>
+          Nombre y empresa
+          <input
+            type="text"
+            name="name"
+            placeholder="María Pérez - Planta Textil"
+            required
+          />
+        </label>
+        <label>
+          Correo electrónico
+          <input
+            type="email"
+            name="email"
+            placeholder="tucorreo@empresa.com"
+            required
+          />
+        </label>
+        <label>
+          ¿Qué necesitas?
+          <textarea
+            name="message"
+            rows="4"
+            placeholder="Indica productos, presentaciones o volúmenes"
+          ></textarea>
+        </label>
+        <button type="submit" class="btn btn-primary">Enviar mensaje</button>
+      </form>
+    </div>
+  </section>
 </Layout>
