@@ -1,3 +1,5 @@
+import process from "node:process";
+
 export interface ProductPresentation {
   id: string;
   label: string;
@@ -10,6 +12,8 @@ export interface ProductCategory {
   description: string;
   heroHighlight: string;
   image: string;
+  slug?: string;
+  wordpressId?: number;
 }
 
 export interface Product {
@@ -27,9 +31,78 @@ export interface Product {
   heroHighlights: string[];
 }
 
+const DEFAULT_API_BASE = "https://test.insumosquimicos.pe/wp-json/wc/v3";
+const PLACEHOLDER_IMAGE = "/images/placeholder.svg";
+
+const API_BASE =
+  import.meta.env.WC_API_URL ?? process.env.WC_API_URL ?? DEFAULT_API_BASE;
+const CONSUMER_KEY =
+  import.meta.env.WC_CONSUMER_KEY ?? process.env.WC_CONSUMER_KEY ?? "";
+const CONSUMER_SECRET =
+  import.meta.env.WC_CONSUMER_SECRET ?? process.env.WC_CONSUMER_SECRET ?? "";
+
+interface WooCommerceImage {
+  src: string;
+  alt?: string;
+}
+
+interface WooCommerceCategory {
+  id: number;
+  name: string;
+  slug: string;
+  description?: string;
+}
+
+interface WooCommerceAttribute {
+  id: number;
+  name: string;
+  slug: string;
+  visible: boolean;
+  variation: boolean;
+  options: string[];
+}
+
+interface WooCommerceMetaData {
+  id: number;
+  key: string;
+  value: unknown;
+}
+
+interface WooCommerceProduct {
+  id: number;
+  name: string;
+  slug: string;
+  description: string;
+  short_description: string;
+  date_created: string;
+  date_modified: string;
+  featured: boolean;
+  total_sales: number;
+  images: WooCommerceImage[];
+  categories: WooCommerceCategory[];
+  attributes: WooCommerceAttribute[];
+  meta_data: WooCommerceMetaData[];
+}
+
+interface WooCommerceCategoryResponse extends WooCommerceCategory {
+  count?: number;
+  parent?: number;
+}
+
+const remoteCategoryIndex = new Map<
+  string,
+  { name: string; wordpressId?: number }
+>();
+
+let cachedProducts: Product[] | null = null;
+let productsPromise: Promise<Product[] | null> | null = null;
+let cachedCategories: ProductCategory[] | null = null;
+let categoriesPromise: Promise<ProductCategory[] | null> | null = null;
+
 export const productCategories: ProductCategory[] = [
   {
     id: "acidos",
+    slug: "acidos",
     name: "Ácidos Industriales",
     description:
       "Soluciones para tratamiento de superficies, limpieza y procesos metalúrgicos.",
@@ -39,6 +112,7 @@ export const productCategories: ProductCategory[] = [
   },
   {
     id: "solventes",
+    slug: "solventes",
     name: "Solventes y diluyentes",
     description:
       "Materias primas para pinturas, limpieza y productos farmacéuticos.",
@@ -48,6 +122,7 @@ export const productCategories: ProductCategory[] = [
   },
   {
     id: "alimentario",
+    slug: "alimentario",
     name: "Grado alimentario",
     description: "Ingredientes seguros para bebidas, confitería y conservas.",
     heroHighlight: "Cumplimos normativa DIGESA",
@@ -56,6 +131,7 @@ export const productCategories: ProductCategory[] = [
   },
   {
     id: "limpieza",
+    slug: "limpieza",
     name: "Limpieza y cuidado personal",
     description:
       "Tensioactivos, espumantes y desinfectantes para industrias de higiene.",
@@ -65,6 +141,7 @@ export const productCategories: ProductCategory[] = [
   },
   {
     id: "mineria",
+    slug: "mineria",
     name: "Minería y perforación",
     description:
       "Reactivos para flotación, lixiviación y tratamiento de aguas.",
@@ -285,35 +362,446 @@ export const products: Product[] = [
   },
 ];
 
+function hasWooCommerceCredentials(): boolean {
+  return Boolean(CONSUMER_KEY && CONSUMER_SECRET);
+}
+
+function createApiUrl(path: string): URL {
+  const normalizedBase = API_BASE.endsWith("/") ? API_BASE : `${API_BASE}/`;
+  const normalizedPath = path.startsWith("/") ? path.slice(1) : path;
+  return new URL(`${normalizedBase}${normalizedPath}`);
+}
+
+async function fetchWooCommerce<T>(
+  path: string,
+  params: Record<string, string> = {},
+): Promise<T | null> {
+  if (!hasWooCommerceCredentials()) {
+    return null;
+  }
+
+  try {
+    const url = createApiUrl(path);
+    url.searchParams.set("consumer_key", CONSUMER_KEY);
+    url.searchParams.set("consumer_secret", CONSUMER_SECRET);
+    for (const [key, value] of Object.entries(params)) {
+      if (value) {
+        url.searchParams.set(key, value);
+      }
+    }
+
+    const response = await fetch(url.toString());
+    if (!response.ok) {
+      console.warn(
+        `WooCommerce request failed (${response.status} ${response.statusText}) for ${url.pathname}`,
+      );
+      return null;
+    }
+
+    return (await response.json()) as T;
+  } catch (error) {
+    console.warn(`WooCommerce request failed for ${path}`, error);
+    return null;
+  }
+}
+
+function stripHtml(value: string | null | undefined): string {
+  if (!value) {
+    return "";
+  }
+
+  return value
+    .replace(/<\s*br\s*\/?>/gi, "\n")
+    .replace(/<\/(p|div|li|ul|ol|h[1-6]|blockquote)\s*>/gi, "\n")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/&ldquo;|&rdquo;/gi, '"')
+    .replace(/&lsquo;|&rsquo;/gi, "'")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\r?\n+/g, " ")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
+function normalizeForComparison(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+function slugify(value: string): string {
+  const normalized = normalizeForComparison(value);
+  const slug = normalized.replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+  return slug || "opcion";
+}
+
+function parseMetaList(value: unknown): string[] {
+  if (!value) {
+    return [];
+  }
+
+  if (Array.isArray(value)) {
+    return value.flatMap((item) => parseMetaList(item));
+  }
+
+  if (typeof value === "string") {
+    return value
+      .split(/[\n\r|;,•·]+/)
+      .map((item) => stripHtml(item))
+      .map((item) => item.replace(/\s{2,}/g, " ").trim())
+      .filter(Boolean);
+  }
+
+  return [];
+}
+
+function deriveHeroHighlights(product: WooCommerceProduct): string[] {
+  const highlights = new Set<string>();
+  const meta = new Map<string, unknown>();
+
+  for (const entry of product.meta_data ?? []) {
+    if (entry?.key) {
+      meta.set(entry.key, entry.value);
+    }
+  }
+
+  const addValues = (values: string[]) => {
+    for (const value of values) {
+      if (!value) continue;
+      if (!highlights.has(value)) {
+        highlights.add(value);
+      }
+      if (highlights.size >= 6) {
+        break;
+      }
+    }
+  };
+
+  addValues(parseMetaList(meta.get("beneficios")));
+  addValues(parseMetaList(meta.get("aplicaciones")));
+  addValues(parseMetaList(meta.get("efecto")));
+  addValues(parseMetaList(meta.get("forma_del_producto")));
+  addValues(parseMetaList(meta.get("nombre_quimico")));
+
+  if (!highlights.size) {
+    addValues(
+      (product.categories ?? []).map((category) => stripHtml(category.name)),
+    );
+  }
+
+  const defaults = [
+    "Soporte técnico especializado",
+    "Despacho a todo el Perú",
+    "Calidad certificada",
+  ];
+
+  if (!highlights.size) {
+    addValues(defaults);
+  }
+
+  const result = Array.from(highlights);
+  for (const fallback of defaults) {
+    if (result.length >= 3) {
+      break;
+    }
+    if (!result.includes(fallback)) {
+      result.push(fallback);
+    }
+  }
+
+  return result.slice(0, 6);
+}
+
+function resolvePresentations(
+  product: WooCommerceProduct,
+): ProductPresentation[] {
+  const attribute = (product.attributes ?? []).find((attr) => {
+    const reference = normalizeForComparison(attr.name ?? attr.slug ?? "");
+    return reference.includes("presentacion");
+  });
+
+  const options = attribute?.options ?? [];
+  const presentations = options
+    .map((option, index) => {
+      const label = stripHtml(option);
+      return {
+        id: `${product.id}-presentation-${index}-${slugify(label)}`,
+        label: label || option,
+      } satisfies ProductPresentation;
+    })
+    .filter((item) => Boolean(item.label));
+
+  if (presentations.length) {
+    return presentations;
+  }
+
+  return [
+    {
+      id: `${product.id}-presentation-disponibilidad`,
+      label: "Consultar disponibilidad",
+    },
+  ];
+}
+
+function applyCategoryMetadata(category: {
+  id: string;
+  name: string;
+  slug?: string;
+  wordpressId?: number;
+  description?: string;
+  heroHighlight?: string;
+  image?: string;
+}): ProductCategory {
+  const slug = category.slug ?? category.id;
+  const metadata = productCategories.find(
+    (item) => item.id === slug || item.slug === slug,
+  );
+
+  return {
+    id: slug,
+    slug,
+    name: category.name,
+    wordpressId: category.wordpressId ?? metadata?.wordpressId,
+    description: category.description?.trim().length
+      ? category.description.trim()
+      : (metadata?.description ??
+        "Consigue asesoría personalizada para esta categoría."),
+    heroHighlight: category.heroHighlight?.trim().length
+      ? category.heroHighlight.trim()
+      : (metadata?.heroHighlight ?? "Logística inmediata y soporte técnico."),
+    image: category.image?.trim().length
+      ? category.image
+      : (metadata?.image ?? PLACEHOLDER_IMAGE),
+  };
+}
+
+function mapWooCommerceCategory(
+  category: WooCommerceCategoryResponse,
+): ProductCategory | null {
+  if (!category?.slug) {
+    return null;
+  }
+
+  remoteCategoryIndex.set(category.slug, {
+    name: category.name,
+    wordpressId: category.id,
+  });
+
+  return applyCategoryMetadata({
+    id: category.slug,
+    slug: category.slug,
+    name: category.name,
+    wordpressId: category.id,
+    description: stripHtml(category.description ?? ""),
+  });
+}
+
+function mapWooCommerceProduct(product: WooCommerceProduct): Product {
+  const image = product.images?.[0]?.src ?? PLACEHOLDER_IMAGE;
+  const categories = Array.from(
+    new Set(
+      (product.categories ?? []).map((category) => {
+        const slug = category.slug || String(category.id);
+        remoteCategoryIndex.set(slug, {
+          name: category.name,
+          wordpressId: category.id,
+        });
+        return slug;
+      }),
+    ),
+  );
+
+  const presentations = resolvePresentations(product);
+  const rawSummary = stripHtml(
+    product.short_description || product.description || "",
+  );
+  const summary =
+    rawSummary.length > 220 ? `${rawSummary.slice(0, 217)}...` : rawSummary;
+  const description = stripHtml(
+    product.description || product.short_description || "",
+  );
+  const heroHighlights = deriveHeroHighlights(product);
+
+  return {
+    id: String(product.id),
+    name: product.name,
+    slug: product.slug,
+    image,
+    categories,
+    presentations,
+    summary:
+      summary ||
+      "Solicita una ficha técnica para conocer especificaciones y usos.",
+    description:
+      description ||
+      "Contáctanos para recibir la ficha técnica completa y asesoría especializada.",
+    popularity: Number(product.total_sales ?? 0) || 0,
+    createdAt: product.date_created || new Date().toISOString(),
+    featured: product.featured,
+    heroHighlights,
+  };
+}
+
+async function loadWooCommerceProducts(): Promise<Product[] | null> {
+  const response = await fetchWooCommerce<WooCommerceProduct[]>("/products", {
+    per_page: "100",
+    status: "publish",
+    order: "desc",
+  });
+
+  if (!Array.isArray(response) || !response.length) {
+    return null;
+  }
+
+  remoteCategoryIndex.clear();
+  return response.map((item) => mapWooCommerceProduct(item));
+}
+
+async function loadWooCommerceCategories(): Promise<ProductCategory[] | null> {
+  const response = await fetchWooCommerce<WooCommerceCategoryResponse[]>(
+    "/products/categories",
+    {
+      per_page: "100",
+      hide_empty: "false",
+    },
+  );
+
+  if (!Array.isArray(response) || !response.length) {
+    return null;
+  }
+
+  const collection = new Map<string, ProductCategory>();
+  for (const item of response) {
+    const mapped = mapWooCommerceCategory(item);
+    if (mapped) {
+      collection.set(mapped.id, mapped);
+    }
+  }
+
+  for (const fallback of productCategories) {
+    if (!collection.has(fallback.id)) {
+      collection.set(fallback.id, fallback);
+    }
+  }
+
+  const categories = Array.from(collection.values());
+  categories.sort((a, b) => a.name.localeCompare(b.name, "es-PE"));
+  return categories;
+}
+
+function deriveCategoriesFromIndex(): ProductCategory[] | null {
+  if (!remoteCategoryIndex.size) {
+    return null;
+  }
+
+  const collection = new Map<string, ProductCategory>();
+  for (const [slug, info] of remoteCategoryIndex.entries()) {
+    const entry = applyCategoryMetadata({
+      id: slug,
+      slug,
+      name: info.name,
+      wordpressId: info.wordpressId,
+    });
+    collection.set(entry.id, entry);
+  }
+
+  for (const fallback of productCategories) {
+    if (!collection.has(fallback.id)) {
+      collection.set(fallback.id, fallback);
+    }
+  }
+
+  const categories = Array.from(collection.values());
+  categories.sort((a, b) => a.name.localeCompare(b.name, "es-PE"));
+  return categories;
+}
+
 export async function getProducts(): Promise<Product[]> {
+  if (cachedProducts) {
+    return cachedProducts;
+  }
+
+  if (!productsPromise) {
+    productsPromise = loadWooCommerceProducts().then((result) => {
+      if (!result) {
+        productsPromise = null;
+      }
+      return result;
+    });
+  }
+
+  const remote = await productsPromise;
+  if (remote && remote.length) {
+    cachedProducts = remote;
+    return remote;
+  }
+
+  cachedProducts = products;
   return products;
 }
 
 export async function getFeaturedProducts(): Promise<Product[]> {
-  return products.filter((product) => product.featured);
+  const catalog = await getProducts();
+  const featured = catalog.filter((product) => product.featured);
+  return featured.length ? featured : catalog.slice(0, 6);
 }
 
 export async function getProductBySlug(
   slug: string,
 ): Promise<Product | undefined> {
-  return products.find((product) => product.slug === slug);
+  const catalog = await getProducts();
+  return catalog.find((product) => product.slug === slug);
 }
 
 export async function getRelatedProducts(slug: string): Promise<Product[]> {
-  const current = products.find((product) => product.slug === slug);
-  if (!current) return products.slice(0, 3);
-  const related = products.filter(
+  const catalog = await getProducts();
+  const current = catalog.find((product) => product.slug === slug);
+  if (!current) {
+    return catalog.filter((product) => product.slug !== slug).slice(0, 3);
+  }
+
+  const related = catalog.filter(
     (product) =>
       product.slug !== slug &&
       product.categories.some((category) =>
         current.categories.includes(category),
       ),
   );
+
   return related.length
     ? related.slice(0, 3)
-    : products.filter((product) => product.slug !== slug).slice(0, 3);
+    : catalog.filter((product) => product.slug !== slug).slice(0, 3);
 }
 
 export async function getCategories(): Promise<ProductCategory[]> {
+  if (cachedCategories) {
+    return cachedCategories;
+  }
+
+  if (!categoriesPromise) {
+    categoriesPromise = loadWooCommerceCategories().then((result) => {
+      if (!result) {
+        categoriesPromise = null;
+      }
+      return result;
+    });
+  }
+
+  const remote = await categoriesPromise;
+  if (remote && remote.length) {
+    cachedCategories = remote;
+    return remote;
+  }
+
+  const derived = deriveCategoriesFromIndex();
+  if (derived && derived.length) {
+    cachedCategories = derived;
+    return derived;
+  }
+
+  cachedCategories = productCategories;
   return productCategories;
 }

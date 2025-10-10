@@ -1,46 +1,55 @@
-# Astro Starter Kit: Basics
+# Química Industrial frontend
 
-```sh
-npm create astro@latest -- --template basics
-```
+Sitio marketing construido con [Astro](https://astro.build/) para mostrar el catálogo de Insumos Químicos Perú y habilitar un flujo de cotización rápido. El proyecto consume la API de WooCommerce cuando las credenciales están configuradas y mantiene datos locales como respaldo para desarrollos sin conexión.
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+## Requisitos
 
-## 🚀 Project Structure
+- Node.js 18+
+- npm 9+
 
-Inside of your Astro project, you'll see the following folders and files:
+## Puesta en marcha
 
-```text
-/
-├── public/
-│   └── favicon.svg
-├── src
-│   ├── assets
-│   │   └── astro.svg
-│   ├── components
-│   │   └── Welcome.astro
-│   ├── layouts
-│   │   └── Layout.astro
-│   └── pages
-│       └── index.astro
-└── package.json
-```
+1. Copia el archivo de ejemplo de variables de entorno y actualiza los valores si tienes credenciales distintas:
+   ```sh
+   cp .env.example .env
+   ```
+2. Instala las dependencias:
+   ```sh
+   npm install
+   ```
+3. Ejecuta el entorno de desarrollo:
+   ```sh
+   npm run dev
+   ```
+4. Genera la versión de producción cuando necesites validar el build:
+   ```sh
+   npm run build
+   ```
 
-To learn more about the folder structure of an Astro project, refer to [our guide on project structure](https://docs.astro.build/en/basics/project-structure/).
+## Variables de entorno
 
-## 🧞 Commands
+| Variable             | Descripción                                                              |
+| -------------------- | ------------------------------------------------------------------------ |
+| `WC_API_URL`         | URL base del endpoint de WooCommerce (`https://tu-sitio/wp-json/wc/v3`). |
+| `WC_CONSUMER_KEY`    | Consumer key generada en WooCommerce.                                    |
+| `WC_CONSUMER_SECRET` | Consumer secret correspondiente a la key anterior.                       |
 
-All commands are run from the root of the project, from a terminal:
+Si las credenciales no están presentes, el sitio utiliza los datos de ejemplo incluidos en `src/data/products.ts` para mantener la experiencia de navegación durante el desarrollo.
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
+## Arquitectura
 
-## 👀 Want to learn more?
+- **Astro + Island architecture** para servir páginas estáticas con componentes interactivos puntuales.
+- **Catálogo dinámico** a través de `src/data/products.ts`, que consulta la API de WooCommerce y transforma la respuesta al modelo utilizado por la interfaz.
+- **Fallback local** que asegura contenido en caso de fallos de red o ausencia de credenciales.
 
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+## Scripts disponibles
+
+| Comando           | Acción                                                |
+| ----------------- | ----------------------------------------------------- |
+| `npm run dev`     | Ejecuta el entorno de desarrollo en `localhost:4321`. |
+| `npm run build`   | Construye el sitio estático en la carpeta `dist/`.    |
+| `npm run preview` | Sirve la build generada para pruebas locales.         |
+
+## Estilo y linting
+
+El proyecto incluye configuración de ESLint (ver `eslint.config.js`). Ejecuta `npm run lint` si deseas validar el código antes de abrir un Pull Request.
