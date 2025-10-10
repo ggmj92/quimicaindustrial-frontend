@@ -250,6 +250,7 @@ const {
           '[data-action="remove-from-cart"]',
         );
         const openTrigger = target.closest('[data-action="open-cart"]');
+        const closeTrigger = target.closest("[data-cart-close]");
 
         if (addTrigger) {
           const payload = getPayloadFromNode(addTrigger);
@@ -268,6 +269,10 @@ const {
 
         if (openTrigger) {
           document.dispatchEvent(new CustomEvent("qi-cart-open"));
+        }
+
+        if (closeTrigger) {
+          document.dispatchEvent(new CustomEvent("qi-cart-close"));
         }
       });
 
