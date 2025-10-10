@@ -1,6 +1,8 @@
 ---
 import Layout from "../../layouts/Layout.astro";
+import "../../styles/pages/catalog.css";
 import { getProducts, getCategories } from "../../data/products";
+import type { Product } from "../../data/products";
 
 const products = await getProducts();
 const categories = await getCategories();
@@ -10,7 +12,33 @@ const presentationOptions = Array.from(
       product.presentations.map((presentation) => presentation.label),
     ),
   ),
-).sort();
+).sort((a, b) => a.localeCompare(b, "es-PE", { sensitivity: "base" }));
+
+const STOCK_LABELS = {
+  instock: "En stock",
+  outofstock: "Agotado",
+  onbackorder: "Disponible bajo pedido",
+} as const;
+
+const getStockLabel = (status: string) =>
+  STOCK_LABELS[status as keyof typeof STOCK_LABELS] ??
+  "Consultar disponibilidad";
+
+const getStockClass = (status: string) => {
+  switch (status) {
+    case "instock":
+      return "is-available";
+    case "onbackorder":
+      return "is-backorder";
+    case "outofstock":
+      return "is-unavailable";
+    default:
+      return "is-unknown";
+  }
+};
+
+const getPriceText = (product: Product) =>
+  product.priceText ?? "Consultar precio";
 ---
 
 <Layout
@@ -125,11 +153,30 @@ const presentationOptions = Array.from(
           {
             products.map((product) => {
               const primaryPresentation = product.presentations[0];
+              const categoryNames = product.categories
+                .map(
+                  (categoryId) =>
+                    categories.find((item) => item.id === categoryId)?.name ??
+                    categoryId,
+                )
+                .join(" ");
+              const presentationLabels = product.presentations
+                .map((presentation) => presentation.label)
+                .join(" ");
+              const searchIndex = [
+                product.name,
+                product.summary,
+                categoryNames,
+                presentationLabels,
+              ]
+                .filter(Boolean)
+                .join(" ");
               return (
                 <article
                   class="card product-card"
                   data-product-card
-                  data-name={product.name.toLowerCase()}
+                  data-sort-name={product.name}
+                  data-search-index={searchIndex}
                   data-popularity={product.popularity}
                   data-date={product.createdAt}
                   data-categories={product.categories.join(",")}
@@ -163,6 +210,21 @@ const presentationOptions = Array.from(
                     </div>
                     <h3>{product.name}</h3>
                     {product.summary && <p>{product.summary}</p>}
+                    {product.presentations.length > 0 && (
+                      <ul class="product-presentations">
+                        {product.presentations.map((presentation) => (
+                          <li>{presentation.label}</li>
+                        ))}
+                      </ul>
+                    )}
+                    <div class="product-pricing">
+                      <span class="price">{getPriceText(product)}</span>
+                      <span
+                        class={`stock ${getStockClass(product.stockStatus)}`}
+                      >
+                        {getStockLabel(product.stockStatus)}
+                      </span>
+                    </div>
                   </div>
                   <div class="product-actions">
                     <a
@@ -183,6 +245,9 @@ const presentationOptions = Array.from(
                       }
                       data-presentation-id={primaryPresentation?.id || ""}
                       data-product-image={product.image}
+                      data-product-price={product.price ?? ""}
+                      data-product-price-text={product.priceText ?? ""}
+                      data-product-stock-status={product.stockStatus}
                     >
                       Agregar
                     </button>
@@ -217,10 +282,20 @@ const presentationOptions = Array.from(
     const grid = document.querySelector("[data-product-grid]");
     if (!grid) return;
 
+    const normalizeText = (value) =>
+      (value || "")
+        .toString()
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
+
     const cards = Array.from(grid.querySelectorAll("[data-product-card]")).map(
       (element) => ({
         element,
-        name: (element.getAttribute("data-name") || "").toLowerCase(),
+        rawName: element.getAttribute("data-sort-name") || "",
+        searchIndex: normalizeText(
+          element.getAttribute("data-search-index") || "",
+        ),
         categories: (element.getAttribute("data-categories") || "")
           .split(",")
           .filter(Boolean),
@@ -240,6 +315,7 @@ const presentationOptions = Array.from(
 
     const state = {
       search: "",
+      searchNormalized: "",
       categories: new Set(),
       presentations: new Set(),
       sort: "alpha",
@@ -258,9 +334,9 @@ const presentationOptions = Array.from(
     const sortSelect = document.querySelector("[data-filter-sort]");
 
     const applyFilters = () => {
-      const term = state.search.trim();
+      const term = state.searchNormalized.trim();
       return cards.filter((card) => {
-        const matchesSearch = !term || card.name.includes(term);
+        const matchesSearch = !term || card.searchIndex.includes(term);
         const matchesCategory =
           !state.categories.size ||
           card.categories.some((category) => state.categories.has(category));
@@ -277,7 +353,11 @@ const presentationOptions = Array.from(
       const sorted = [...data];
       switch (state.sort) {
         case "alpha":
-          sorted.sort((a, b) => a.name.localeCompare(b.name));
+          sorted.sort((a, b) =>
+            a.rawName.localeCompare(b.rawName, "es-PE", {
+              sensitivity: "base",
+            }),
+          );
           break;
         case "popular":
           sorted.sort((a, b) => b.popularity - a.popularity);
@@ -303,12 +383,13 @@ const presentationOptions = Array.from(
         state.currentPage = totalPages;
       }
 
+      const start = (state.currentPage - 1) * state.perPage;
+      const end = start + state.perPage;
+
       filtered.forEach((item, index) => {
-        const start = (state.currentPage - 1) * state.perPage;
-        const end = start + state.perPage;
-        item.element.style.display =
-          index >= start && index < end ? "" : "none";
-        if (index >= start && index < end) {
+        const isVisible = index >= start && index < end;
+        item.element.style.display = isVisible ? "" : "none";
+        if (isVisible) {
           grid.appendChild(item.element);
         }
       });
@@ -320,9 +401,13 @@ const presentationOptions = Array.from(
       });
 
       if (resultCount) {
-        resultCount.textContent = totalItems
-          ? `Mostrando ${Math.min(totalItems, state.perPage)} de ${totalItems} productos`
-          : "No encontramos productos con esos filtros";
+        if (!totalItems) {
+          resultCount.textContent = "No encontramos productos con esos filtros";
+        } else {
+          const visibleStart = Math.min(start + 1, totalItems);
+          const visibleEnd = Math.min(end, totalItems);
+          resultCount.textContent = `Mostrando ${visibleStart}-${visibleEnd} de ${totalItems} productos`;
+        }
       }
 
       if (pagination) {
@@ -399,6 +484,7 @@ const presentationOptions = Array.from(
       state.presentations.clear();
       state.currentPage = 1;
       state.search = "";
+      state.searchNormalized = "";
       if (searchInput instanceof HTMLInputElement) {
         searchInput.value = "";
       }
@@ -408,7 +494,8 @@ const presentationOptions = Array.from(
     searchInput?.addEventListener("input", (event) => {
       const target = event.target;
       if (!(target instanceof HTMLInputElement)) return;
-      state.search = target.value.toLowerCase();
+      state.search = target.value;
+      state.searchNormalized = normalizeText(target.value);
       state.currentPage = 1;
       render();
     });
@@ -446,225 +533,3 @@ const presentationOptions = Array.from(
     });
   });
 </script>
-
-<style>
-  .catalog {
-    background: linear-gradient(
-      180deg,
-      rgba(13, 71, 161, 0.05),
-      transparent 40%
-    );
-  }
-
-  .catalog-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 2rem;
-    flex-wrap: wrap;
-    margin-bottom: 2rem;
-  }
-
-  .catalog-layout {
-    display: grid;
-    grid-template-columns: 280px 1fr;
-    gap: 2.5rem;
-  }
-
-  .catalog-sidebar {
-    background: var(--color-surface);
-    border-radius: var(--radius-md);
-    padding: 1.75rem;
-    box-shadow: var(--shadow-md);
-    position: sticky;
-    top: 110px;
-    height: fit-content;
-  }
-
-  .filter-form {
-    display: grid;
-    gap: 1.5rem;
-  }
-
-  fieldset {
-    border: none;
-    padding: 0;
-    margin: 0;
-    display: grid;
-    gap: 0.75rem;
-  }
-
-  legend {
-    font-weight: 700;
-    margin-bottom: 0.5rem;
-  }
-
-  .checkbox {
-    display: flex;
-    align-items: center;
-    gap: 0.65rem;
-    font-size: 0.95rem;
-  }
-
-  .checkbox input {
-    width: 18px;
-    height: 18px;
-  }
-
-  .catalog-main {
-    display: grid;
-    gap: 1.5rem;
-  }
-
-  .catalog-toolbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 1rem;
-  }
-
-  .search-group {
-    flex: 1;
-    min-width: 220px;
-  }
-
-  .search-group input {
-    width: 100%;
-    padding: 0.75rem 1rem;
-    border-radius: 999px;
-    border: 1px solid var(--color-border);
-    background: var(--color-surface);
-    box-shadow: var(--shadow-sm);
-  }
-
-  .toolbar-controls {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    flex-wrap: wrap;
-  }
-
-  .toolbar-controls label {
-    display: grid;
-    gap: 0.35rem;
-    font-weight: 600;
-  }
-
-  .toolbar-controls select {
-    padding: 0.5rem 0.75rem;
-    border-radius: 12px;
-    border: 1px solid var(--color-border);
-  }
-
-  .catalog-result {
-    margin: 0;
-    color: var(--color-muted);
-  }
-
-  .product-grid {
-    display: grid;
-    gap: 1.5rem;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  }
-
-  .product-card {
-    display: grid;
-    gap: 1rem;
-  }
-
-  .product-image img {
-    width: 100%;
-    height: 200px;
-    object-fit: cover;
-    border-radius: var(--radius-md);
-  }
-
-  .image-fallback {
-    width: 100%;
-    height: 200px;
-    border-radius: var(--radius-md);
-    background: linear-gradient(
-      135deg,
-      rgba(13, 71, 161, 0.18),
-      rgba(0, 172, 193, 0.2)
-    );
-  }
-
-  .product-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-  }
-
-  .product-actions {
-    display: flex;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-  }
-
-  .filter-empty {
-    margin: 0;
-    color: var(--color-muted);
-    font-size: 0.85rem;
-  }
-
-  .pagination {
-    display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-    justify-content: center;
-    padding-top: 1rem;
-  }
-
-  .pagination button {
-    padding: 0.55rem 0.9rem;
-    border-radius: 999px;
-    border: 1px solid var(--color-border);
-    background: var(--color-surface);
-    cursor: pointer;
-    font-weight: 600;
-  }
-
-  .pagination button.is-active {
-    background: linear-gradient(
-      135deg,
-      var(--color-primary),
-      var(--color-secondary)
-    );
-    color: #f8fafc;
-    border-color: transparent;
-  }
-
-  .pagination button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  .empty-state {
-    margin: 1rem 0 0;
-    color: var(--color-muted);
-  }
-
-  .sr-only {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    border: 0;
-  }
-
-  @media (max-width: 1000px) {
-    .catalog-layout {
-      grid-template-columns: 1fr;
-    }
-
-    .catalog-sidebar {
-      position: static;
-      order: 2;
-    }
-  }
-</style>

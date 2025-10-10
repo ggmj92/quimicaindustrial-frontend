@@ -1,5 +1,6 @@
 ---
 import Layout from "../layouts/Layout.astro";
+import "../styles/pages/quote.css";
 import { getProducts } from "../data/products";
 
 const products = await getProducts();
@@ -132,6 +133,9 @@ const serializedProducts = JSON.stringify(products);
         image: product.image,
         slug: product.slug,
         quantity: 1,
+        price: product.price ?? "",
+        priceText: product.priceText ?? "",
+        stockStatus: product.stockStatus,
       };
       if (window.qiCart?.add) {
         window.qiCart.add(payload);
@@ -152,98 +156,3 @@ const serializedProducts = JSON.stringify(products);
     });
   });
 </script>
-
-<style>
-  .quote {
-    background: linear-gradient(
-      180deg,
-      rgba(13, 71, 161, 0.05),
-      rgba(0, 172, 193, 0.05)
-    );
-    padding-block: clamp(3rem, 6vw, 5rem);
-  }
-
-  .quote-layout {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    gap: 2.5rem;
-    align-items: start;
-  }
-
-  .quote-summary {
-    background: var(--color-surface);
-    border-radius: var(--radius-md);
-    padding: 2rem;
-    box-shadow: var(--shadow-md);
-    display: grid;
-    gap: 1.5rem;
-  }
-
-  .quote-totals {
-    display: flex;
-    align-items: baseline;
-    gap: 0.5rem;
-  }
-
-  .quote-totals strong {
-    font-size: 2rem;
-  }
-
-  .quote-add {
-    display: grid;
-    gap: 0.5rem;
-  }
-
-  .quote-add-control {
-    display: flex;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-  }
-
-  .quote-add-control select {
-    flex: 1;
-    min-width: 180px;
-    padding: 0.75rem 1rem;
-    border-radius: 12px;
-    border: 1px solid var(--color-border);
-  }
-
-  .quote-items {
-    display: grid;
-    gap: 1rem;
-  }
-
-  .quote-form {
-    background: var(--color-surface);
-    border-radius: var(--radius-md);
-    padding: 2rem;
-    box-shadow: var(--shadow-md);
-    display: grid;
-    gap: 1rem;
-  }
-
-  .quote-form label {
-    display: grid;
-    gap: 0.4rem;
-    font-weight: 600;
-  }
-
-  .quote-form input,
-  .quote-form textarea,
-  .quote-add-control select {
-    font-family: inherit;
-  }
-
-  .quote-form input,
-  .quote-form textarea {
-    padding: 0.75rem 1rem;
-    border-radius: 12px;
-    border: 1px solid var(--color-border);
-  }
-
-  .quote-feedback {
-    margin: 0;
-    color: var(--color-primary);
-    font-weight: 600;
-  }
-</style>

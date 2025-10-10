@@ -1,5 +1,6 @@
 ---
 import Layout from "../../layouts/Layout.astro";
+import "../../styles/pages/product-detail.css";
 import {
   getProducts,
   getCategories,
@@ -29,6 +30,33 @@ const productCategories = product.categories
 const relatedProducts = (await getRelatedProducts(product.slug)).filter(
   (item) => item.slug !== product.slug,
 );
+
+const STOCK_LABELS = {
+  instock: "En stock",
+  outofstock: "Agotado",
+  onbackorder: "Disponible bajo pedido",
+} as const;
+
+const getStockLabel = (status: string) =>
+  STOCK_LABELS[status as keyof typeof STOCK_LABELS] ??
+  "Consultar disponibilidad";
+
+const getStockClass = (status: string) => {
+  switch (status) {
+    case "instock":
+      return "is-available";
+    case "onbackorder":
+      return "is-backorder";
+    case "outofstock":
+      return "is-unavailable";
+    default:
+      return "is-unknown";
+  }
+};
+
+const priceText = product.priceText ?? "Consultar precio";
+const stockLabel = getStockLabel(product.stockStatus);
+const stockClass = getStockClass(product.stockStatus);
 ---
 
 <Layout
@@ -55,6 +83,10 @@ const relatedProducts = (await getRelatedProducts(product.slug)).filter(
         <span class="tag">Ficha técnica</span>
         <h1>{product.name}</h1>
         {product.summary && <p class="product-summary">{product.summary}</p>}
+        <div class="product-pricing detail-pricing">
+          <span class="price">{priceText}</span>
+          <span class={`stock ${stockClass}`}>{stockLabel}</span>
+        </div>
         {
           productCategories.length > 0 && (
             <ul class="product-categories">
@@ -111,6 +143,9 @@ const relatedProducts = (await getRelatedProducts(product.slug)).filter(
             data-product-image={product.image}
             data-product-presentation={product.presentations[0]?.label || ""}
             data-presentation-id={product.presentations[0]?.id || ""}
+            data-product-price={product.price ?? ""}
+            data-product-price-text={product.priceText ?? ""}
+            data-product-stock-status={product.stockStatus}
           >
             Añadir al carrito de cotización
           </button>
@@ -172,6 +207,12 @@ const relatedProducts = (await getRelatedProducts(product.slug)).filter(
                   <div class="related-body">
                     <h3>{item.name}</h3>
                     {item.summary && <p>{item.summary}</p>}
+                    <div class="product-pricing">
+                      <span class="price">{getPriceText(item)}</span>
+                      <span class={`stock ${getStockClass(item.stockStatus)}`}>
+                        {getStockLabel(item.stockStatus)}
+                      </span>
+                    </div>
                   </div>
                   <div class="related-actions">
                     <a class="btn btn-outline" href={`/products/${item.slug}`}>
@@ -187,6 +228,9 @@ const relatedProducts = (await getRelatedProducts(product.slug)).filter(
                       data-product-presentation={presentation?.label || ""}
                       data-presentation-id={presentation?.id || ""}
                       data-product-image={item.image}
+                      data-product-price={item.price ?? ""}
+                      data-product-price-text={item.priceText ?? ""}
+                      data-product-stock-status={item.stockStatus}
                     >
                       Agregar
                     </button>
@@ -233,135 +277,3 @@ const relatedProducts = (await getRelatedProducts(product.slug)).filter(
     updateFromSelect();
   });
 </script>
-
-<style>
-  .product-detail {
-    padding-top: clamp(3rem, 6vw, 5rem);
-  }
-
-  .product-hero {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 2.5rem;
-    align-items: center;
-  }
-
-  .product-media img {
-    width: 100%;
-    border-radius: clamp(24px, 4vw, 36px);
-    box-shadow: var(--shadow-lg);
-    object-fit: cover;
-    max-height: 420px;
-  }
-
-  .image-fallback {
-    width: 100%;
-    border-radius: clamp(24px, 4vw, 36px);
-    box-shadow: var(--shadow-lg);
-    min-height: 320px;
-    background: linear-gradient(
-      135deg,
-      rgba(13, 71, 161, 0.18),
-      rgba(0, 172, 193, 0.2)
-    );
-  }
-
-  .product-summary {
-    font-size: 1.05rem;
-    color: var(--color-muted);
-  }
-
-  .product-categories {
-    list-style: none;
-    display: flex;
-    gap: 0.75rem;
-    padding: 0;
-    margin: 1.25rem 0 1.75rem;
-  }
-
-  .product-categories li span {
-    display: inline-flex;
-    padding: 0.4rem 0.85rem;
-    border-radius: 999px;
-    background: rgba(13, 71, 161, 0.08);
-    color: var(--color-primary);
-    font-weight: 600;
-  }
-
-  .product-presentations {
-    display: grid;
-    gap: 0.5rem;
-    margin-bottom: 1.5rem;
-  }
-
-  .product-presentations select {
-    padding: 0.75rem 1rem;
-    border-radius: 12px;
-    border: 1px solid var(--color-border);
-    font-family: inherit;
-  }
-
-  .presentation-note {
-    margin: 0;
-    color: var(--color-muted);
-  }
-
-  .product-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-  }
-
-  .product-description {
-    background: var(--color-surface);
-    padding-block: clamp(3rem, 6vw, 5rem);
-  }
-
-  .product-description p {
-    font-size: 1.05rem;
-    color: var(--color-muted);
-  }
-
-  .product-benefits {
-    list-style: disc;
-    padding-left: 1.5rem;
-    color: #0f172a;
-    display: grid;
-    gap: 0.5rem;
-    margin-top: 1rem;
-  }
-
-  .related-products .carousel {
-    padding-top: 1rem;
-  }
-
-  .related-card {
-    display: grid;
-    gap: 1rem;
-  }
-
-  .related-card img,
-  .related-card .image-fallback {
-    width: 100%;
-    height: 180px;
-    object-fit: cover;
-    border-radius: var(--radius-md);
-  }
-
-  .related-actions {
-    display: flex;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-    margin-top: auto;
-  }
-
-  .muted {
-    color: var(--color-muted);
-  }
-
-  @media (max-width: 800px) {
-    .product-categories {
-      flex-wrap: wrap;
-    }
-  }
-</style>

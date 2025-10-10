@@ -1,3 +1,4 @@
+import { Buffer } from "node:buffer";
 import process from "node:process";
 
 export interface ProductPresentation {
@@ -29,17 +30,35 @@ export interface Product {
   createdAt: string;
   featured?: boolean;
   heroHighlights: string[];
+  price: string | null;
+  regularPrice: string | null;
+  salePrice: string | null;
+  priceText: string | null;
+  stockStatus: string;
+  stockQuantity: number | null;
+  purchasable: boolean;
 }
 
 const DEFAULT_API_BASE = "https://test.insumosquimicos.pe/wp-json/wc/v3";
 const PLACEHOLDER_IMAGE = "/images/placeholder.svg";
 
+const DEFAULT_CONSUMER_KEY = "ck_deab038b47bb888419d8edbd76b8acba8d8754c5";
+const DEFAULT_CONSUMER_SECRET = "cs_6731881cceb5f7479a96de7b83a8e3cccc6db297";
+
 const API_BASE =
   import.meta.env.WC_API_URL ?? process.env.WC_API_URL ?? DEFAULT_API_BASE;
 const CONSUMER_KEY =
-  import.meta.env.WC_CONSUMER_KEY ?? process.env.WC_CONSUMER_KEY ?? "";
+  import.meta.env.WC_CONSUMER_KEY ??
+  process.env.WC_CONSUMER_KEY ??
+  DEFAULT_CONSUMER_KEY;
 const CONSUMER_SECRET =
-  import.meta.env.WC_CONSUMER_SECRET ?? process.env.WC_CONSUMER_SECRET ?? "";
+  import.meta.env.WC_CONSUMER_SECRET ??
+  process.env.WC_CONSUMER_SECRET ??
+  DEFAULT_CONSUMER_SECRET;
+const AUTH_HEADER =
+  CONSUMER_KEY && CONSUMER_SECRET
+    ? `Basic ${Buffer.from(`${CONSUMER_KEY}:${CONSUMER_SECRET}`).toString("base64")}`
+    : null;
 
 interface WooCommerceImage {
   src: string;
@@ -83,6 +102,13 @@ interface WooCommerceProduct {
   categories: WooCommerceCategory[];
   attributes: WooCommerceAttribute[];
   meta_data: WooCommerceMetaData[];
+  price?: string | null;
+  regular_price?: string | null;
+  sale_price?: string | null;
+  price_html?: string | null;
+  stock_status?: string | null;
+  stock_quantity?: number | null;
+  purchasable?: boolean;
 }
 
 interface WooCommerceCategoryResponse extends WooCommerceCategory {
@@ -120,15 +146,19 @@ async function fetchWooCommerce<T>(
 
   try {
     const url = createApiUrl(path);
-    url.searchParams.set("consumer_key", CONSUMER_KEY);
-    url.searchParams.set("consumer_secret", CONSUMER_SECRET);
+    const headers: Record<string, string> = {
+      Accept: "application/json",
+    };
+    if (AUTH_HEADER) {
+      headers.Authorization = AUTH_HEADER;
+    }
     for (const [key, value] of Object.entries(params)) {
       if (value) {
         url.searchParams.set(key, value);
       }
     }
 
-    const response = await fetch(url.toString());
+    const response = await fetch(url.toString(), { headers });
     if (!response.ok) {
       console.warn(
         `WooCommerce request failed (${response.status} ${response.statusText}) for ${url.pathname}`,
@@ -366,6 +396,25 @@ function mapWooCommerceProduct(product: WooCommerceProduct): Product {
       ? `${summarySource.slice(0, 217)}...`
       : summarySource;
   const heroHighlights = deriveHeroHighlights(product);
+  const price = product.price?.toString().trim() || null;
+  const regularPrice = product.regular_price?.toString().trim() || null;
+  const salePrice = product.sale_price?.toString().trim() || null;
+  const rawPriceText = stripHtml(product.price_html ?? "");
+  const priceText = rawPriceText || price || regularPrice || null;
+  const stockStatus =
+    (product.stock_status || "").toLowerCase() ||
+    (product.purchasable ? "instock" : "outofstock");
+  const stockQuantity =
+    typeof product.stock_quantity === "number"
+      ? product.stock_quantity
+      : product.stock_quantity != null
+        ? Number(product.stock_quantity) || null
+        : null;
+  const purchasable =
+    typeof product.purchasable === "boolean"
+      ? product.purchasable
+      : stockStatus === "instock" ||
+        (stockQuantity != null && stockQuantity > 0);
 
   return {
     id: String(product.id),
@@ -380,39 +429,85 @@ function mapWooCommerceProduct(product: WooCommerceProduct): Product {
     createdAt: product.date_created || new Date().toISOString(),
     featured: product.featured,
     heroHighlights,
+    price,
+    regularPrice,
+    salePrice,
+    priceText,
+    stockStatus,
+    stockQuantity,
+    purchasable,
   };
 }
 
 async function loadWooCommerceProducts(): Promise<Product[] | null> {
-  const response = await fetchWooCommerce<WooCommerceProduct[]>("/products", {
-    per_page: "100",
-    status: "publish",
-    order: "desc",
-  });
+  const aggregated: WooCommerceProduct[] = [];
+  const perPage = 100;
+  let page = 1;
 
-  if (!Array.isArray(response) || !response.length) {
+  remoteCategoryIndex.clear();
+
+  while (page <= 25) {
+    const response = await fetchWooCommerce<WooCommerceProduct[]>("/products", {
+      per_page: String(perPage),
+      status: "publish",
+      order: "desc",
+      page: String(page),
+    });
+
+    if (!Array.isArray(response) || !response.length) {
+      break;
+    }
+
+    aggregated.push(...response);
+
+    if (response.length < perPage) {
+      break;
+    }
+
+    page += 1;
+  }
+
+  if (!aggregated.length) {
     return null;
   }
 
-  remoteCategoryIndex.clear();
-  return response.map((item) => mapWooCommerceProduct(item));
+  return aggregated.map((item) => mapWooCommerceProduct(item));
 }
 
 async function loadWooCommerceCategories(): Promise<ProductCategory[] | null> {
-  const response = await fetchWooCommerce<WooCommerceCategoryResponse[]>(
-    "/products/categories",
-    {
-      per_page: "100",
-      hide_empty: "false",
-    },
-  );
+  const aggregated: WooCommerceCategoryResponse[] = [];
+  const perPage = 100;
+  let page = 1;
 
-  if (!Array.isArray(response) || !response.length) {
+  while (page <= 25) {
+    const response = await fetchWooCommerce<WooCommerceCategoryResponse[]>(
+      "/products/categories",
+      {
+        per_page: String(perPage),
+        hide_empty: "false",
+        page: String(page),
+      },
+    );
+
+    if (!Array.isArray(response) || !response.length) {
+      break;
+    }
+
+    aggregated.push(...response);
+
+    if (response.length < perPage) {
+      break;
+    }
+
+    page += 1;
+  }
+
+  if (!aggregated.length) {
     return null;
   }
 
   const collection = new Map<string, ProductCategory>();
-  for (const item of response) {
+  for (const item of aggregated) {
     const mapped = mapWooCommerceCategory(item);
     if (mapped) {
       collection.set(mapped.id, mapped);

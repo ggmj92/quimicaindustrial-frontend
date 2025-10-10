@@ -1,9 +1,48 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import { getFeaturedProducts, getCategories } from "../data/products";
+import "../styles/pages/home.css";
+import {
+  getFeaturedProducts,
+  getCategories,
+  getProducts,
+} from "../data/products";
+import type { Product } from "../data/products";
 
 const featuredProducts = await getFeaturedProducts();
 const categories = await getCategories();
+const products = await getProducts();
+const heroProduct = featuredProducts[0] ?? products[0] ?? null;
+const presentationCount = new Set(
+  products.flatMap((product) =>
+    product.presentations.map((item) => item.label),
+  ),
+).size;
+
+const STOCK_LABELS = {
+  instock: "En stock",
+  outofstock: "Agotado",
+  onbackorder: "Disponible bajo pedido",
+} as const;
+
+const getStockLabel = (status: string) =>
+  STOCK_LABELS[status as keyof typeof STOCK_LABELS] ??
+  "Consultar disponibilidad";
+
+const getStockClass = (status: string) => {
+  switch (status) {
+    case "instock":
+      return "is-available";
+    case "onbackorder":
+      return "is-backorder";
+    case "outofstock":
+      return "is-unavailable";
+    default:
+      return "is-unknown";
+  }
+};
+
+const getPriceText = (product: Product) =>
+  product.priceText ?? "Consultar precio";
 ---
 
 <Layout
@@ -18,9 +57,19 @@ const categories = await getCategories();
         <h1>Químicos industriales listos para tu proceso productivo</h1>
         <p>
           Somos tu aliado en abastecimiento de materias primas con soporte
-          técnico, trazabilidad y entregas ágiles. El catálogo que ves a
-          continuación se sincroniza directamente con WooCommerce para mostrar
-          productos reales.
+          técnico, trazabilidad y entregas ágiles. Nuestro catálogo muestra
+          {products.length} productos activos agrupados en {categories.length}
+          {" "}
+          {categories.length === 1 ? "categoría" : "categorías"} y
+          {" "}
+          {presentationCount}
+          {" "}
+          {
+            presentationCount === 1
+              ? "presentación disponible"
+              : "presentaciones disponibles"
+          }
+          , listos para cotizar con tu equipo.
         </p>
         <form class="hero-search" role="search">
           <label class="sr-only" for="hero-search">Buscar producto</label>
@@ -44,16 +93,28 @@ const categories = await getCategories();
         </div>
         <ul class="hero-stats">
           <li>
-            <strong>+150</strong>
+            <strong>{products.length}</strong>
             <span>Productos activos</span>
           </li>
           <li>
-            <strong>24h</strong>
-            <span>Entrega en Lima</span>
+            <strong>{categories.length}</strong>
+            <span>
+              {
+                categories.length === 1
+                  ? "Categoría disponible"
+                  : "Categorías disponibles"
+              }
+            </span>
           </li>
           <li>
-            <strong>ISO</strong>
-            <span>Proveedores certificados</span>
+            <strong>{presentationCount || "-"}</strong>
+            <span>
+              {
+                presentationCount === 1
+                  ? "Presentación disponible"
+                  : "Presentaciones"
+              }
+            </span>
           </li>
         </ul>
       </div>
@@ -63,8 +124,10 @@ const categories = await getCategories();
           <div class="bubble bubble-md"></div>
           <div class="bubble bubble-sm"></div>
           <img
-            src="https://images.unsplash.com/photo-1581092152835-30ab079f19b9?auto=format&fit=crop&w=900&q=80"
-            alt="Laboratorio químico"
+            src={heroProduct?.image ?? "/images/placeholder.svg"}
+            alt={heroProduct
+              ? `Imagen del producto ${heroProduct.name}`
+              : "Ilustración del catálogo de Química Industrial"}
           />
         </div>
       </div>
@@ -109,6 +172,14 @@ const categories = await getCategories();
                   <div class="product-body">
                     <h3>{product.name}</h3>
                     {product.summary && <p>{product.summary}</p>}
+                    <div class="product-pricing">
+                      <span class="price">{getPriceText(product)}</span>
+                      <span
+                        class={`stock ${getStockClass(product.stockStatus)}`}
+                      >
+                        {getStockLabel(product.stockStatus)}
+                      </span>
+                    </div>
                     {highlights.length > 0 && (
                       <ul class="product-tags">
                         {highlights.map((highlight) => (
@@ -134,6 +205,9 @@ const categories = await getCategories();
                       data-product-presentation={presentation?.label || ""}
                       data-presentation-id={presentation?.id || ""}
                       data-product-image={product.image}
+                      data-product-price={product.price ?? ""}
+                      data-product-price-text={product.priceText ?? ""}
+                      data-product-stock-status={product.stockStatus}
                     >
                       Añadir
                     </button>
