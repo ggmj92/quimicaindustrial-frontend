@@ -1,0 +1,479 @@
+---
+const navLinks = [
+  { href: "/", label: "Inicio" },
+  { href: "/products", label: "Productos" },
+  { href: "/contacto", label: "Contacto" },
+  { href: "/cotizacion", label: "Solicita tu cotización" },
+];
+---
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="/">
+      <span class="brand-mark">QI</span>
+      <div class="brand-copy">
+        <span class="brand-title">Química Industrial</span>
+        <span class="brand-subtitle">Distribución de químicos en Lima</span>
+      </div>
+    </a>
+
+    <button
+      class="menu-toggle"
+      type="button"
+      aria-label="Abrir menú"
+      data-menu-toggle
+    >
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+
+    <nav class="site-nav" data-site-nav>
+      <ul>
+        {
+          navLinks.map((link) => (
+            <li>
+              <a href={link.href}>{link.label}</a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <div class="header-actions">
+      <a class="btn btn-outline quote-btn" href="/cotizacion">Cotizar ahora</a>
+      <button
+        class="cart-button"
+        type="button"
+        data-cart-toggle
+        aria-haspopup="dialog"
+        aria-expanded="false"
+      >
+        <span class="cart-icon" aria-hidden="true">
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M3 3h1.6a1 1 0 0 1 .98.8l.66 3.3M7 14h11.18a1 1 0 0 0 .98-.8l1.13-5.63a1 1 0 0 0-.98-1.2H6.24"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+              stroke-linejoin="round"></path>
+            <circle cx="9" cy="19" r="1" fill="currentColor"></circle>
+            <circle cx="18" cy="19" r="1" fill="currentColor"></circle>
+          </svg>
+        </span>
+        <span>Carrito</span>
+        <span class="cart-count" data-cart-count>0</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="cart-overlay" data-cart-overlay hidden>
+  <div
+    class="cart-drawer"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="cart-title"
+  >
+    <div class="cart-header">
+      <h2 id="cart-title">Carrito de cotización</h2>
+      <button
+        type="button"
+        class="close-button"
+        data-cart-close
+        aria-label="Cerrar carrito">×</button
+      >
+    </div>
+    <div class="cart-body">
+      <p class="cart-empty" data-cart-empty>
+        No hay productos en tu carrito todavía.
+      </p>
+      <ul class="cart-items" data-cart-items></ul>
+    </div>
+    <div class="cart-footer">
+      <a class="btn btn-primary" href="/cotizacion">Ir a cotización</a>
+    </div>
+  </div>
+</div>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    width: 100%;
+    z-index: 20;
+    backdrop-filter: blur(14px);
+    background: rgba(241, 245, 249, 0.9);
+    border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+  }
+
+  .header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    padding-block: 0.85rem;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .brand-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    background: linear-gradient(
+      135deg,
+      var(--color-primary) 0%,
+      var(--color-secondary) 100%
+    );
+    color: #f8fafc;
+    font-weight: 700;
+    font-size: 1.15rem;
+    letter-spacing: 0.08em;
+  }
+
+  .brand-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+
+  .brand-title {
+    font-weight: 700;
+    font-size: 1.1rem;
+  }
+
+  .brand-subtitle {
+    font-size: 0.75rem;
+    color: var(--color-muted);
+    letter-spacing: 0.02em;
+  }
+
+  .site-nav ul {
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    margin: 0;
+    padding: 0;
+  }
+
+  .site-nav a {
+    font-weight: 600;
+    color: #0f172a;
+    position: relative;
+  }
+
+  .site-nav a::after {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    bottom: -0.45rem;
+    height: 2px;
+    background: linear-gradient(
+      135deg,
+      var(--color-primary),
+      var(--color-secondary)
+    );
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 150ms ease;
+  }
+
+  .site-nav a:hover::after,
+  .site-nav a:focus-visible::after {
+    transform: scaleX(1);
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .quote-btn {
+    font-size: 0.95rem;
+    padding-inline: 1.15rem;
+  }
+
+  .cart-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: #0f172a;
+    color: #f8fafc;
+    border-radius: 999px;
+    padding: 0.6rem 1rem;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .cart-button:hover {
+    background: var(--color-primary);
+  }
+
+  .cart-icon {
+    display: inline-flex;
+  }
+
+  .cart-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.6rem;
+    height: 1.6rem;
+    border-radius: 999px;
+    background: rgba(248, 250, 252, 0.2);
+    padding-inline: 0.4rem;
+    font-size: 0.8rem;
+  }
+
+  .menu-toggle {
+    display: none;
+    flex-direction: column;
+    gap: 0.3rem;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0.35rem;
+  }
+
+  .menu-toggle span {
+    display: block;
+    width: 1.6rem;
+    height: 2px;
+    border-radius: 999px;
+    background: #0f172a;
+    transition:
+      transform 150ms ease,
+      opacity 150ms ease;
+  }
+
+  .menu-toggle[aria-expanded="true"] span:nth-child(1) {
+    transform: translateY(6px) rotate(45deg);
+  }
+
+  .menu-toggle[aria-expanded="true"] span:nth-child(2) {
+    opacity: 0;
+  }
+
+  .menu-toggle[aria-expanded="true"] span:nth-child(3) {
+    transform: translateY(-6px) rotate(-45deg);
+  }
+
+  .cart-overlay {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    place-items: end;
+    background: rgba(15, 23, 42, 0.35);
+    padding: clamp(1rem, 4vw, 3rem);
+  }
+
+  .cart-drawer {
+    width: min(420px, 100%);
+    background: var(--color-surface);
+    border-radius: 24px;
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    flex-direction: column;
+    max-height: min(80vh, 640px);
+    overflow: hidden;
+  }
+
+  .cart-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.5rem 1.75rem 1.25rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .cart-header h2 {
+    margin: 0;
+    font-size: 1.25rem;
+  }
+
+  .close-button {
+    background: transparent;
+    border: none;
+    font-size: 2rem;
+    line-height: 1;
+    cursor: pointer;
+    color: var(--color-muted);
+  }
+
+  .cart-body {
+    padding-inline: 1.75rem;
+    padding-block: 1.5rem;
+    overflow-y: auto;
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .cart-items {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .cart-item {
+    display: grid;
+    grid-template-columns: 64px 1fr auto;
+    gap: 0.75rem;
+    align-items: center;
+  }
+
+  .cart-item img {
+    width: 64px;
+    height: 64px;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+  }
+
+  .cart-item button {
+    background: transparent;
+    border: none;
+    color: var(--color-muted);
+    cursor: pointer;
+  }
+
+  .cart-footer {
+    padding: 1.25rem 1.75rem 1.5rem;
+    border-top: 1px solid var(--color-border);
+    display: flex;
+    justify-content: center;
+  }
+
+  .cart-empty {
+    color: var(--color-muted);
+    text-align: center;
+  }
+
+  @media (max-width: 900px) {
+    .menu-toggle {
+      display: flex;
+    }
+
+    .site-nav {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.9);
+      backdrop-filter: blur(16px);
+      transform: translateY(-100%);
+      transition: transform 200ms ease;
+      padding: min(20vh, 6rem) 2rem 2.5rem;
+      display: flex;
+      justify-content: center;
+    }
+
+    .site-nav ul {
+      flex-direction: column;
+      gap: 1.5rem;
+      align-items: center;
+    }
+
+    .site-nav a {
+      color: #f8fafc;
+      font-size: 1.25rem;
+    }
+
+    .site-nav[data-open="true"] {
+      transform: translateY(0%);
+    }
+
+    .header-actions {
+      gap: 0.5rem;
+    }
+
+    .quote-btn {
+      display: none;
+    }
+  }
+</style>
+
+<script is:inline>
+  document.addEventListener("DOMContentLoaded", () => {
+    const toggle = document.querySelector("[data-menu-toggle]");
+    const nav = document.querySelector("[data-site-nav]");
+
+    if (toggle && nav) {
+      toggle.addEventListener("click", () => {
+        const expanded = toggle.getAttribute("aria-expanded") === "true";
+        toggle.setAttribute("aria-expanded", expanded ? "false" : "true");
+        nav.dataset.open = expanded ? "false" : "true";
+        if (!expanded) {
+          nav.querySelector("a")?.focus();
+        }
+      });
+
+      nav.querySelectorAll("a").forEach((link) => {
+        link.addEventListener("click", () => {
+          toggle.setAttribute("aria-expanded", "false");
+          nav.dataset.open = "false";
+        });
+      });
+    }
+
+    const cartToggle = document.querySelector("[data-cart-toggle]");
+    const cartOverlay = document.querySelector("[data-cart-overlay]");
+    const cartClose = document.querySelector("[data-cart-close]");
+
+    const openCart = () => {
+      if (cartOverlay) {
+        cartOverlay.hidden = false;
+        document.body.style.overflow = "hidden";
+        cartToggle?.setAttribute("aria-expanded", "true");
+      }
+    };
+
+    const closeCart = () => {
+      if (cartOverlay) {
+        cartOverlay.hidden = true;
+        document.body.style.overflow = "";
+        cartToggle?.setAttribute("aria-expanded", "false");
+      }
+    };
+
+    cartToggle?.addEventListener("click", () => {
+      if (cartOverlay?.hidden) {
+        openCart();
+      } else {
+        closeCart();
+      }
+    });
+
+    cartClose?.addEventListener("click", closeCart);
+
+    cartOverlay?.addEventListener("click", (event) => {
+      if (event.target === cartOverlay) {
+        closeCart();
+      }
+    });
+
+    document.addEventListener("qi-cart-open", openCart);
+    document.addEventListener("qi-cart-close", closeCart);
+  });
+</script>

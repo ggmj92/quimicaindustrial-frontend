@@ -1,0 +1,670 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { getProducts, getCategories } from "../../data/products";
+
+const products = await getProducts();
+const categories = await getCategories();
+const presentationOptions = Array.from(
+  new Set(
+    products.flatMap((product) =>
+      product.presentations.map((presentation) => presentation.label),
+    ),
+  ),
+).sort();
+---
+
+<Layout
+  title="Catálogo de productos químicos | Química Industrial"
+  description="Explora químicos industriales, solventes, ácidos y materias primas disponibles en Lima, Perú. Filtra por categoría, presentación o popularidad."
+  canonical="https://www.quimicaindustrial.pe/products"
+>
+  <section class="catalog">
+    <div class="container">
+      <header class="catalog-header">
+        <div>
+          <span class="tag">Catálogo completo</span>
+          <h1>Encuentra el químico que necesitas</h1>
+          <p>
+            Los siguientes productos provienen directamente de la API de
+            WooCommerce. Utiliza los filtros para encontrar la materia prima que
+            necesitas y arma tu cotización.
+          </p>
+        </div>
+        <a class="btn btn-primary" href="/cotizacion">Solicitar cotización</a>
+      </header>
+    </div>
+
+    <div class="container catalog-layout">
+      <aside class="catalog-sidebar">
+        <h2>Filtros</h2>
+        <form class="filter-form" data-filter-form>
+          <fieldset>
+            <legend>Categorías</legend>
+            {
+              categories.length ? (
+                categories.map((category) => (
+                  <label class="checkbox">
+                    <input
+                      type="checkbox"
+                      value={category.id}
+                      data-filter-category
+                    />
+                    <span>{category.name}</span>
+                  </label>
+                ))
+              ) : (
+                <p class="filter-empty">Aún no hay categorías para filtrar.</p>
+              )
+            }
+          </fieldset>
+
+          <fieldset>
+            <legend>Presentaciones</legend>
+            {
+              presentationOptions.length ? (
+                presentationOptions.map((presentation) => (
+                  <label class="checkbox">
+                    <input
+                      type="checkbox"
+                      value={presentation}
+                      data-filter-presentation
+                    />
+                    <span>{presentation}</span>
+                  </label>
+                ))
+              ) : (
+                <p class="filter-empty">
+                  Los productos no incluyen presentaciones.
+                </p>
+              )
+            }
+          </fieldset>
+
+          <button type="reset" class="btn btn-outline">Limpiar filtros</button>
+        </form>
+      </aside>
+
+      <div class="catalog-main">
+        <div class="catalog-toolbar">
+          <div class="search-group">
+            <label class="sr-only" for="catalog-search">Buscar productos</label>
+            <input
+              id="catalog-search"
+              type="search"
+              placeholder="Busca por nombre o uso"
+              data-filter-search
+            />
+          </div>
+          <div class="toolbar-controls">
+            <label>
+              Ordenar por
+              <select data-filter-sort>
+                <option value="alpha">Nombre (A-Z)</option>
+                <option value="popular">Popularidad</option>
+                <option value="newest">Más recientes</option>
+                <option value="oldest">Más antiguos</option>
+              </select>
+            </label>
+            <label>
+              Productos por página
+              <select data-filter-per-page>
+                <option value="6">6</option>
+                <option value="9" selected>9</option>
+                <option value="12">12</option>
+                <option value="18">18</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <p class="catalog-result" data-result-count>
+          Mostrando {products.length} productos
+        </p>
+
+        <div class="product-grid" data-product-grid>
+          {
+            products.map((product) => {
+              const primaryPresentation = product.presentations[0];
+              return (
+                <article
+                  class="card product-card"
+                  data-product-card
+                  data-name={product.name.toLowerCase()}
+                  data-popularity={product.popularity}
+                  data-date={product.createdAt}
+                  data-categories={product.categories.join(",")}
+                  data-presentations={product.presentations
+                    .map((item) => item.label)
+                    .join(",")}
+                >
+                  <div class="product-image">
+                    {product.image ? (
+                      <img
+                        src={product.image}
+                        alt={`Imagen de ${product.name}`}
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div class="image-fallback" aria-hidden="true" />
+                    )}
+                  </div>
+                  <div class="product-body">
+                    <div class="product-meta">
+                      {product.categories.map((categoryId) => {
+                        const category = categories.find(
+                          (item) => item.id === categoryId,
+                        );
+                        return (
+                          <span class="tag">
+                            {category?.name ?? categoryId}
+                          </span>
+                        );
+                      })}
+                    </div>
+                    <h3>{product.name}</h3>
+                    {product.summary && <p>{product.summary}</p>}
+                  </div>
+                  <div class="product-actions">
+                    <a
+                      class="btn btn-outline"
+                      href={`/products/${product.slug}`}
+                    >
+                      Ver más
+                    </a>
+                    <button
+                      class="btn btn-primary"
+                      type="button"
+                      data-action="add-to-cart"
+                      data-product-id={product.id}
+                      data-product-name={product.name}
+                      data-product-slug={product.slug}
+                      data-product-presentation={
+                        primaryPresentation?.label || ""
+                      }
+                      data-presentation-id={primaryPresentation?.id || ""}
+                      data-product-image={product.image}
+                    >
+                      Agregar
+                    </button>
+                  </div>
+                </article>
+              );
+            })
+          }
+        </div>
+
+        {
+          !products.length && (
+            <p class="empty-state">
+              No hay productos disponibles en este momento.
+            </p>
+          )
+        }
+
+        <nav
+          class="pagination"
+          data-pagination
+          aria-label="Paginación de productos"
+        >
+        </nav>
+      </div>
+    </div>
+  </section>
+</Layout>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const grid = document.querySelector("[data-product-grid]");
+    if (!grid) return;
+
+    const cards = Array.from(grid.querySelectorAll("[data-product-card]")).map(
+      (element) => ({
+        element,
+        name: (element.getAttribute("data-name") || "").toLowerCase(),
+        categories: (element.getAttribute("data-categories") || "")
+          .split(",")
+          .filter(Boolean),
+        presentations: (element.getAttribute("data-presentations") || "")
+          .split(",")
+          .filter(Boolean),
+        popularity: Number(element.getAttribute("data-popularity") || "0"),
+        date: element.getAttribute("data-date") || "",
+      }),
+    );
+
+    const perPageSelect = document.querySelector("[data-filter-per-page]");
+    const initialPerPage =
+      perPageSelect && "value" in perPageSelect
+        ? Number(perPageSelect.value)
+        : 9;
+
+    const state = {
+      search: "",
+      categories: new Set(),
+      presentations: new Set(),
+      sort: "alpha",
+      perPage:
+        Number.isFinite(initialPerPage) && initialPerPage > 0
+          ? initialPerPage
+          : 9,
+      currentPage: 1,
+    };
+
+    const resultCount = document.querySelector("[data-result-count]");
+    const pagination = document.querySelector("[data-pagination]");
+
+    const filterForm = document.querySelector("[data-filter-form]");
+    const searchInput = document.querySelector("[data-filter-search]");
+    const sortSelect = document.querySelector("[data-filter-sort]");
+
+    const applyFilters = () => {
+      const term = state.search.trim();
+      return cards.filter((card) => {
+        const matchesSearch = !term || card.name.includes(term);
+        const matchesCategory =
+          !state.categories.size ||
+          card.categories.some((category) => state.categories.has(category));
+        const matchesPresentation =
+          !state.presentations.size ||
+          card.presentations.some((presentation) =>
+            state.presentations.has(presentation),
+          );
+        return matchesSearch && matchesCategory && matchesPresentation;
+      });
+    };
+
+    const sortCards = (data) => {
+      const sorted = [...data];
+      switch (state.sort) {
+        case "alpha":
+          sorted.sort((a, b) => a.name.localeCompare(b.name));
+          break;
+        case "popular":
+          sorted.sort((a, b) => b.popularity - a.popularity);
+          break;
+        case "newest":
+          sorted.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+          break;
+        case "oldest":
+          sorted.sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+          break;
+        default:
+          break;
+      }
+      return sorted;
+    };
+
+    const render = () => {
+      const filtered = sortCards(applyFilters());
+      const totalItems = filtered.length;
+      const totalPages = Math.max(1, Math.ceil(totalItems / state.perPage));
+
+      if (state.currentPage > totalPages) {
+        state.currentPage = totalPages;
+      }
+
+      filtered.forEach((item, index) => {
+        const start = (state.currentPage - 1) * state.perPage;
+        const end = start + state.perPage;
+        item.element.style.display =
+          index >= start && index < end ? "" : "none";
+        if (index >= start && index < end) {
+          grid.appendChild(item.element);
+        }
+      });
+
+      cards.forEach((card) => {
+        if (!filtered.includes(card)) {
+          card.element.style.display = "none";
+        }
+      });
+
+      if (resultCount) {
+        resultCount.textContent = totalItems
+          ? `Mostrando ${Math.min(totalItems, state.perPage)} de ${totalItems} productos`
+          : "No encontramos productos con esos filtros";
+      }
+
+      if (pagination) {
+        pagination.innerHTML = "";
+        if (totalPages <= 1) {
+          pagination.setAttribute("hidden", "");
+        } else {
+          pagination.removeAttribute("hidden");
+
+          const buildButton = (label, page, disabled = false) => {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.textContent = label;
+            button.dataset.page = String(page);
+            button.disabled = disabled;
+            if (page === state.currentPage) {
+              button.classList.add("is-active");
+            }
+            return button;
+          };
+
+          pagination.appendChild(
+            buildButton(
+              "Anterior",
+              state.currentPage - 1,
+              state.currentPage === 1,
+            ),
+          );
+
+          for (let page = 1; page <= totalPages; page += 1) {
+            pagination.appendChild(buildButton(String(page), page));
+          }
+
+          pagination.appendChild(
+            buildButton(
+              "Siguiente",
+              state.currentPage + 1,
+              state.currentPage === totalPages,
+            ),
+          );
+        }
+      }
+    };
+
+    render();
+
+    filterForm?.addEventListener("change", (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLInputElement)) return;
+
+      if (target.matches("[data-filter-category]")) {
+        if (target.checked) {
+          state.categories.add(target.value);
+        } else {
+          state.categories.delete(target.value);
+        }
+        state.currentPage = 1;
+        render();
+      }
+
+      if (target.matches("[data-filter-presentation]")) {
+        if (target.checked) {
+          state.presentations.add(target.value);
+        } else {
+          state.presentations.delete(target.value);
+        }
+        state.currentPage = 1;
+        render();
+      }
+    });
+
+    filterForm?.addEventListener("reset", () => {
+      state.categories.clear();
+      state.presentations.clear();
+      state.currentPage = 1;
+      state.search = "";
+      if (searchInput instanceof HTMLInputElement) {
+        searchInput.value = "";
+      }
+      render();
+    });
+
+    searchInput?.addEventListener("input", (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLInputElement)) return;
+      state.search = target.value.toLowerCase();
+      state.currentPage = 1;
+      render();
+    });
+
+    sortSelect?.addEventListener("change", (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLSelectElement)) return;
+      state.sort = target.value;
+      state.currentPage = 1;
+      render();
+    });
+
+    perPageSelect?.addEventListener("change", (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLSelectElement)) return;
+      const nextPerPage = Number(target.value);
+      state.perPage =
+        Number.isFinite(nextPerPage) && nextPerPage > 0 ? nextPerPage : 9;
+      state.currentPage = 1;
+      render();
+    });
+
+    pagination?.addEventListener("click", (event) => {
+      const target =
+        event.target instanceof Element ? event.target.closest("button") : null;
+      if (!target) return;
+      const desiredPage = Number(target.dataset.page);
+      if (!Number.isNaN(desiredPage)) {
+        state.currentPage = Math.min(
+          Math.max(desiredPage, 1),
+          Math.max(1, Math.ceil(applyFilters().length / state.perPage)),
+        );
+        render();
+      }
+    });
+  });
+</script>
+
+<style>
+  .catalog {
+    background: linear-gradient(
+      180deg,
+      rgba(13, 71, 161, 0.05),
+      transparent 40%
+    );
+  }
+
+  .catalog-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 2rem;
+    flex-wrap: wrap;
+    margin-bottom: 2rem;
+  }
+
+  .catalog-layout {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 2.5rem;
+  }
+
+  .catalog-sidebar {
+    background: var(--color-surface);
+    border-radius: var(--radius-md);
+    padding: 1.75rem;
+    box-shadow: var(--shadow-md);
+    position: sticky;
+    top: 110px;
+    height: fit-content;
+  }
+
+  .filter-form {
+    display: grid;
+    gap: 1.5rem;
+  }
+
+  fieldset {
+    border: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  legend {
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+
+  .checkbox {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    font-size: 0.95rem;
+  }
+
+  .checkbox input {
+    width: 18px;
+    height: 18px;
+  }
+
+  .catalog-main {
+    display: grid;
+    gap: 1.5rem;
+  }
+
+  .catalog-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .search-group {
+    flex: 1;
+    min-width: 220px;
+  }
+
+  .search-group input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border-radius: 999px;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .toolbar-controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .toolbar-controls label {
+    display: grid;
+    gap: 0.35rem;
+    font-weight: 600;
+  }
+
+  .toolbar-controls select {
+    padding: 0.5rem 0.75rem;
+    border-radius: 12px;
+    border: 1px solid var(--color-border);
+  }
+
+  .catalog-result {
+    margin: 0;
+    color: var(--color-muted);
+  }
+
+  .product-grid {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  }
+
+  .product-card {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .product-image img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    border-radius: var(--radius-md);
+  }
+
+  .image-fallback {
+    width: 100%;
+    height: 200px;
+    border-radius: var(--radius-md);
+    background: linear-gradient(
+      135deg,
+      rgba(13, 71, 161, 0.18),
+      rgba(0, 172, 193, 0.2)
+    );
+  }
+
+  .product-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .product-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .filter-empty {
+    margin: 0;
+    color: var(--color-muted);
+    font-size: 0.85rem;
+  }
+
+  .pagination {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding-top: 1rem;
+  }
+
+  .pagination button {
+    padding: 0.55rem 0.9rem;
+    border-radius: 999px;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    cursor: pointer;
+    font-weight: 600;
+  }
+
+  .pagination button.is-active {
+    background: linear-gradient(
+      135deg,
+      var(--color-primary),
+      var(--color-secondary)
+    );
+    color: #f8fafc;
+    border-color: transparent;
+  }
+
+  .pagination button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .empty-state {
+    margin: 1rem 0 0;
+    color: var(--color-muted);
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+  }
+
+  @media (max-width: 1000px) {
+    .catalog-layout {
+      grid-template-columns: 1fr;
+    }
+
+    .catalog-sidebar {
+      position: static;
+      order: 2;
+    }
+  }
+</style>
