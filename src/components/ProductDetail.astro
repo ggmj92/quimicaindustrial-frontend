@@ -137,6 +137,47 @@ const stockClass = getStockClass(product.stockStatus);
           )
         }
 
+        <!-- Physical State -->
+        {
+          product.physicalState && (
+            <div class="product-physical-state">
+              <strong>Estado Físico:</strong>{" "}
+              <span class="physical-state-value">{product.physicalState}</span>
+            </div>
+          )
+        }
+
+        <!-- Metrics -->
+        {
+          (product.views !== undefined ||
+            product.searches !== undefined ||
+            product.totalQuotes !== undefined) && (
+            <div class="product-metrics">
+              <h3>Estadísticas del producto</h3>
+              <div class="metrics-grid">
+                {product.views !== undefined && (
+                  <div class="metric-item">
+                    <span class="metric-value">{product.views}</span>
+                    <span class="metric-label">Vistas</span>
+                  </div>
+                )}
+                {product.searches !== undefined && (
+                  <div class="metric-item">
+                    <span class="metric-value">{product.searches}</span>
+                    <span class="metric-label">Búsquedas</span>
+                  </div>
+                )}
+                {product.totalQuotes !== undefined && (
+                  <div class="metric-item">
+                    <span class="metric-value">{product.totalQuotes}</span>
+                    <span class="metric-label">Cotizaciones</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )
+        }
+
         <!-- Presentations -->
         <div class="product-presentations">
           <label for="presentations">Presentaciones disponibles</label>
@@ -660,6 +701,59 @@ const stockClass = getStockClass(product.stockStatus);
     font-style: italic;
   }
 
+  .product-physical-state {
+    font-size: 0.9375rem;
+    color: var(--color-text);
+    margin-bottom: 1rem;
+  }
+
+  .physical-state-value {
+    text-transform: capitalize;
+    color: var(--color-primary);
+    font-weight: 600;
+  }
+
+  .product-metrics {
+    margin: 1.5rem 0;
+    padding: 1.5rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+  }
+
+  .product-metrics h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0 0 1rem 0;
+    color: var(--color-heading);
+  }
+
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+  }
+
+  .metric-item {
+    text-align: center;
+    padding: 1rem;
+    background: white;
+    border-radius: 6px;
+  }
+
+  .metric-value {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin-bottom: 0.25rem;
+  }
+
+  .metric-label {
+    display: block;
+    font-size: 0.875rem;
+    color: var(--color-muted);
+  }
+
   @media (max-width: 768px) {
     .product-hero .container {
       grid-template-columns: 1fr;
@@ -677,6 +771,10 @@ const stockClass = getStockClass(product.stockStatus);
 
     .btn {
       width: 100%;
+    }
+
+    .metrics-grid {
+      grid-template-columns: 1fr;
     }
   }
 </style>

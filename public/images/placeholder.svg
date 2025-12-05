@@ -1,6 +1,0 @@
-<svg width="512" height="384" viewBox="0 0 512 384" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="512" height="384" rx="32" fill="#0d47a1"/>
-  <path d="M64 288L176 160L272 256L368 160L448 256" stroke="white" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
-  <circle cx="160" cy="120" r="36" fill="#00acc1"/>
-  <text x="50%" y="320" text-anchor="middle" fill="#e2e8f0" font-size="36" font-family="Inter, Arial, sans-serif">Química Industrial</text>
-</svg>

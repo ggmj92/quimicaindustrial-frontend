@@ -211,12 +211,28 @@ section {
   border-color: rgba(148, 163, 184, 0.2);
 }
 
+.product-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.product-actions .btn {
+  flex: 1;
+  min-width: 0;
+  justify-content: center;
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  padding: 0.5rem 0.75rem !important;
+}
+
 .carousel {
   display: flex;
   gap: 1.5rem;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   padding-bottom: 1rem;
+  align-items: stretch;
 }
 
 .carousel::-webkit-scrollbar {
@@ -229,8 +245,11 @@ section {
 }
 
 .carousel-item {
-  flex: 0 0 min(280px, 80vw);
+  flex: 0 0 280px;
   scroll-snap-align: start;
+  min-width: 280px;
+  max-width: 280px;
+  height: 100%;
 }
 
 @media (max-width: 900px) {
