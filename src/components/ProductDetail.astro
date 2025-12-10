@@ -1,219 +1,114 @@
 ---
-import type { Product, ProductCategory } from "../data/products";
+import type {
+  Product,
+  ProductCategory,
+  RelatedProductWithReason,
+} from "../data/products";
 
 interface Props {
   product: Product;
   categories: ProductCategory[];
+  relatedProducts: RelatedProductWithReason[];
 }
 
-const { product, categories } = Astro.props;
+const { product, categories, relatedProducts } = Astro.props;
 
 const productCategories = product.categories
   .map((categoryId) =>
     categories.find((category) => category.id === categoryId),
   )
   .filter(Boolean);
-
-const STOCK_LABELS = {
-  instock: "En stock",
-  outofstock: "Agotado",
-  onbackorder: "Disponible bajo pedido",
-} as const;
-
-const getStockLabel = (status: string) =>
-  STOCK_LABELS[status as keyof typeof STOCK_LABELS] ??
-  "Consultar disponibilidad";
-
-const getStockClass = (status: string) => {
-  switch (status) {
-    case "instock":
-      return "is-available";
-    case "onbackorder":
-      return "is-backorder";
-    case "outofstock":
-      return "is-unavailable";
-    default:
-      return "is-unknown";
-  }
-};
-
-const priceText = product.priceText ?? "Consultar precio";
-const stockLabel = getStockLabel(product.stockStatus);
-const stockClass = getStockClass(product.stockStatus);
 ---
 
-<div class="product-detail">
+<div class="pdp-wrapper">
   <!-- Product Hero Section -->
-  <section class="product-hero">
+  <section class="pdp-hero">
     <div class="container">
-      <div class="product-media">
-        <!-- Main Image -->
-        <div class="main-image">
-          {
-            product.images.length > 0 ? (
-              <img
-                src={product.images[0].src}
-                alt={product.images[0].alt || `Fotografía de ${product.name}`}
-                loading="lazy"
-                class="product-image"
-              />
-            ) : (
-              <div class="image-fallback" aria-hidden="true" />
-            )
-          }
-        </div>
-
-        <!-- Image Gallery -->
+      <div class="pdp-image-container">
+        {
+          product.images.length > 0 ? (
+            <img
+              src={product.images[0].src}
+              alt={product.images[0].alt || `Fotografía de ${product.name}`}
+              loading="lazy"
+              class="pdp-image"
+              id="pdp-current-image"
+            />
+          ) : (
+            <div class="image-fallback" aria-hidden="true" />
+          )
+        }
         {
           product.images.length > 1 && (
-            <div class="image-gallery">
-              {product.images.slice(1, 5).map((image) => (
-                <img
-                  src={image.thumbnail}
-                  alt={image.alt || `Imagen adicional de ${product.name}`}
-                  loading="lazy"
-                  class="gallery-thumb"
-                />
-              ))}
-            </div>
+            <>
+              <button
+                class="pdp-nav-btn pdp-nav-prev"
+                id="pdp-prev"
+                aria-label="Anterior"
+              >
+                ‹
+              </button>
+              <button
+                class="pdp-nav-btn pdp-nav-next"
+                id="pdp-next"
+                aria-label="Siguiente"
+              >
+                ›
+              </button>
+            </>
           )
         }
       </div>
 
-      <div class="product-info">
-        <!-- Product Header -->
-        <div class="product-header">
-          <span class="tag">Ficha técnica</span>
-          <h1 class="product-title">{product.name}</h1>
-          {product.summary && <p class="product-summary">{product.summary}</p>}
-        </div>
+      <div class="pdp-info">
+        <!-- Product Name -->
+        <h1 class="pdp-title">{product.name}</h1>
 
-        <!-- Price and Stock -->
-        <div class="product-pricing">
-          <div class="price-section">
-            <span class="price">{priceText}</span>
-            {
-              product.onSale && product.salePrice && (
-                <span class="sale-badge">¡Oferta!</span>
-              )
-            }
-          </div>
-          <div class="stock-section">
-            <span class={`stock ${stockClass}`}>{stockLabel}</span>
-            {
-              product.stockQuantity && (
-                <span class="stock-quantity">
-                  ({product.stockQuantity} unidades disponibles)
-                </span>
-              )
-            }
-          </div>
-        </div>
-
-        <!-- Categories -->
-        {
-          productCategories.length > 0 && (
-            <div class="product-categories">
-              <h3>Categorías</h3>
-              <ul class="category-list">
-                {productCategories.map((category) => (
-                  <li class="category-item">
-                    <span class="category-name">
-                      {category?.name ?? "Categoría"}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )
-        }
-
-        <!-- SKU -->
-        {
-          product.sku && (
-            <div class="product-sku">
-              <strong>SKU:</strong> {product.sku}
-            </div>
-          )
-        }
-
-        <!-- Physical State -->
-        {
-          product.physicalState && (
-            <div class="product-physical-state">
-              <strong>Estado Físico:</strong>{" "}
-              <span class="physical-state-value">{product.physicalState}</span>
-            </div>
-          )
-        }
-
-        <!-- Metrics -->
-        {
-          (product.views !== undefined ||
-            product.searches !== undefined ||
-            product.totalQuotes !== undefined) && (
-            <div class="product-metrics">
-              <h3>Estadísticas del producto</h3>
-              <div class="metrics-grid">
-                {product.views !== undefined && (
-                  <div class="metric-item">
-                    <span class="metric-value">{product.views}</span>
-                    <span class="metric-label">Vistas</span>
-                  </div>
-                )}
-                {product.searches !== undefined && (
-                  <div class="metric-item">
-                    <span class="metric-value">{product.searches}</span>
-                    <span class="metric-label">Búsquedas</span>
-                  </div>
-                )}
-                {product.totalQuotes !== undefined && (
-                  <div class="metric-item">
-                    <span class="metric-value">{product.totalQuotes}</span>
-                    <span class="metric-label">Cotizaciones</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          )
-        }
+        <!-- Short Description -->
+        {product.summary && <p class="pdp-summary">{product.summary}</p>}
 
         <!-- Presentations -->
-        <div class="product-presentations">
-          <label for="presentations">Presentaciones disponibles</label>
-          <select id="presentations" data-product-select>
-            {
-              product.presentations.map((presentation) => (
-                <option
-                  value={presentation.id}
-                  data-label={presentation.label}
-                  data-minimum-order={presentation.minimumOrder || ""}
-                >
-                  {presentation.label}
-                  {presentation.minimumOrder &&
-                    ` (mínimo ${presentation.minimumOrder})`}
-                </option>
-              ))
-            }
-          </select>
-          {
-            product.presentations.map(
-              (presentation) =>
-                presentation.minimumOrder && (
-                  <p
-                    class="presentation-note"
-                    data-presentation-note={presentation.id}
-                    hidden
+        {
+          product.presentations && product.presentations.length > 0 && (
+            <div class="pdp-presentations">
+              <label for="pdp-presentations-select" class="pdp-label">
+                Presentaciones disponibles
+              </label>
+              <select
+                id="pdp-presentations-select"
+                class="pdp-select"
+                data-product-select
+              >
+                {product.presentations.map((presentation) => (
+                  <option
+                    value={presentation.id}
+                    data-label={presentation.label}
+                    data-minimum-order={presentation.minimumOrder || ""}
                   >
-                    Pedido mínimo: {presentation.minimumOrder}
-                  </p>
-                ),
-            )
-          }
-        </div>
+                    {presentation.label}
+                    {presentation.minimumOrder &&
+                      ` (mínimo ${presentation.minimumOrder})`}
+                  </option>
+                ))}
+              </select>
+              {product.presentations.map(
+                (presentation) =>
+                  presentation.minimumOrder && (
+                    <p
+                      class="pdp-pres-note"
+                      data-presentation-note={presentation.id}
+                      hidden
+                    >
+                      Pedido mínimo: {presentation.minimumOrder}
+                    </p>
+                  ),
+              )}
+            </div>
+          )
+        }
 
         <!-- Product Actions -->
-        <div class="product-actions">
+        <div class="pdp-actions">
           <button
             class="btn btn-primary"
             type="button"
@@ -224,9 +119,6 @@ const stockClass = getStockClass(product.stockStatus);
             data-product-image={product.image}
             data-product-presentation={product.presentations[0]?.label || ""}
             data-presentation-id={product.presentations[0]?.id || ""}
-            data-product-price={product.price ?? ""}
-            data-product-price-text={product.priceText ?? ""}
-            data-product-stock-status={product.stockStatus}
           >
             Añadir al carrito de cotización
           </button>
@@ -234,553 +126,455 @@ const stockClass = getStockClass(product.stockStatus);
             Solicitar cotización
           </a>
         </div>
+
+        <!-- Description -->
+        {
+          product.description && (
+            <div class="pdp-info-description">
+              <h3>Descripción</h3>
+              <p>{product.description}</p>
+            </div>
+          )
+        }
       </div>
     </div>
   </section>
 
   <!-- Product Details Section -->
-  <section class="product-details">
+  <section class="pdp-details">
     <div class="container">
-      <div class="details-grid">
-        <!-- Description -->
-        <div class="detail-section">
-          <h2>Descripción del Producto</h2>
-          {
-            product.description ? (
-              <div class="description-content">
-                <p>{product.description}</p>
-              </div>
-            ) : (
-              <p class="muted">No contamos con una descripción detallada.</p>
-            )
-          }
-        </div>
-
-        <!-- Specifications -->
-        <div class="detail-section">
-          <h2>Especificaciones Técnicas</h2>
-          <div class="specifications">
-            {
-              product.weight && (
-                <div class="spec-item">
-                  <strong>Peso:</strong> {product.weight}
-                </div>
-              )
-            }
-            {
-              product.dimensions && (
-                <div class="spec-item">
-                  <strong>Dimensiones:</strong>
-                  {product.dimensions.length &&
-                    ` L: ${product.dimensions.length}`}
-                  {product.dimensions.width &&
-                    ` W: ${product.dimensions.width}`}
-                  {product.dimensions.height &&
-                    ` H: ${product.dimensions.height}`}
-                </div>
-              )
-            }
-            {
-              product.attributes.length > 0 && (
-                <div class="spec-item">
-                  <strong>Atributos:</strong>
-                  <ul class="attributes-list">
-                    {product.attributes.map((attr) => (
-                      <li>
-                        <strong>{attr.name}:</strong> {attr.options.join(", ")}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )
-            }
+      <!-- Related Products -->
+      {
+        relatedProducts && relatedProducts.length > 0 && (
+          <div class="pdp-section">
+            <div class="pdp-related-header">
+              <span class="tag">También te puede interesar</span>
+              <h2>Productos relacionados</h2>
+            </div>
+            <div class="pdp-carousel">
+              {relatedProducts.map((item) => {
+                const presentation = item.presentations[0];
+                return (
+                  <article class="pdp-related-card">
+                    <div class="pdp-related-img">
+                      {item.image ? (
+                        <img src={item.image} alt={item.name} loading="lazy" />
+                      ) : (
+                        <div class="image-fallback" aria-hidden="true" />
+                      )}
+                    </div>
+                    <div class="pdp-related-body">
+                      <h3>{item.name}</h3>
+                      <p class="pdp-related-desc">
+                        {item.relationshipReason ||
+                          "Producto relacionado complementario para tu industria."}
+                      </p>
+                    </div>
+                    <div class="pdp-related-actions">
+                      <a
+                        class="btn btn-outline"
+                        href={`/products/${item.slug}`}
+                      >
+                        Ver detalle
+                      </a>
+                      <button
+                        class="btn btn-primary"
+                        type="button"
+                        data-action="add-to-cart"
+                        data-product-id={item.id}
+                        data-product-name={item.name}
+                        data-product-slug={item.slug}
+                        data-product-presentation={presentation?.label || ""}
+                        data-presentation-id={presentation?.id || ""}
+                        data-product-image={item.image}
+                      >
+                        Agregar
+                      </button>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
           </div>
-        </div>
+        )
+      }
 
-        <!-- Benefits and Features -->
-        {
-          product.heroHighlights.length > 0 && (
-            <div class="detail-section">
-              <h2>Beneficios y Características</h2>
-              <ul class="benefits-list">
-                {product.heroHighlights.map((highlight) => (
-                  <li class="benefit-item">{highlight}</li>
-                ))}
-              </ul>
-            </div>
-          )
-        }
-
-        <!-- Tags -->
-        {
-          product.tags.length > 0 && (
-            <div class="detail-section">
-              <h2>Etiquetas</h2>
-              <div class="tags-list">
-                {product.tags.map((tag) => (
-                  <span class="tag">{tag.name}</span>
-                ))}
-              </div>
-            </div>
-          )
-        }
-
-        <!-- Additional Info -->
-        <div class="detail-section">
-          <h2>Información Adicional</h2>
-          <div class="additional-info">
-            <div class="info-item">
-              <strong>Ventas totales:</strong>
-              {product.totalSales}
-            </div>
-            {
-              product.averageRating > 0 && (
-                <div class="info-item">
-                  <strong>Calificación promedio:</strong>{" "}
-                  {product.averageRating}/5 ({product.ratingCount} reseñas)
-                </div>
-              )
-            }
-            <div class="info-item">
-              <strong>Fecha de creación:</strong>
-              {new Date(product.createdAt).toLocaleDateString("es-PE")}
-            </div>
-            {
-              product.purchaseNote && (
-                <div class="info-item">
-                  <strong>Nota de compra:</strong> {product.purchaseNote}
-                </div>
-              )
-            }
-          </div>
+      <!-- Ficha Técnica (Technical Data Sheet) -->
+      <div class="pdp-section">
+        <h2>Ficha Técnica</h2>
+        <div class="pdp-ficha">
+          <p class="pdp-muted">
+            La ficha técnica estará disponible próximamente.
+          </p>
+          <!-- TODO: Add PDF attachment from dashboard -->
         </div>
       </div>
+
+      <!-- Categories -->
+      {
+        productCategories.length > 0 && (
+          <div class="pdp-section">
+            <h2>Categorías</h2>
+            <ul class="pdp-categories">
+              {productCategories.map((category) => (
+                <li class="pdp-category">
+                  <span>{category?.name ?? "Categoría"}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )
+      }
     </div>
   </section>
 </div>
 
 <style>
-  .product-detail {
-    padding: 2rem 0;
-  }
+  /* === PRODUCT DETAIL PAGE === */
 
-  .product-hero {
+  .pdp-wrapper {
     background: #f8f9fa;
-    padding: 3rem 0;
   }
 
-  .product-hero .container {
+  /* Hero Section */
+  .pdp-hero {
+    padding: 2rem 0 1.5rem 0;
+  }
+
+  .pdp-hero .container {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 3rem;
-    align-items: start;
+    gap: 2rem;
+    max-width: 1200px;
   }
 
-  .product-media {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-  }
-
-  .main-image {
+  /* Image Container */
+  .pdp-image-container {
+    position: relative;
     width: 100%;
-    aspect-ratio: 1;
-    overflow: hidden;
-    border-radius: 8px;
+    height: 100%;
     background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   }
 
-  .product-image {
+  .pdp-image {
     width: 100%;
     height: 100%;
     object-fit: cover;
   }
 
-  .image-gallery {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 0.5rem;
-  }
-
-  .gallery-thumb {
+  .pdp-image-fallback {
     width: 100%;
-    aspect-ratio: 1;
-    object-fit: cover;
-    border-radius: 4px;
+    height: 100%;
+    background: #e5e7eb;
+  }
+
+  /* Navigation Buttons */
+  .pdp-nav-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 44px;
+    height: 44px;
+    background: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 24px;
+    color: #0d47a1;
     cursor: pointer;
-    transition: opacity 0.2s;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    transition: all 0.2s;
   }
 
-  .gallery-thumb:hover {
-    opacity: 0.8;
+  .pdp-nav-btn:hover {
+    transform: translateY(-50%) scale(1.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   }
 
-  .product-info {
+  .pdp-nav-prev {
+    left: 12px;
+  }
+
+  .pdp-nav-next {
+    right: 12px;
+  }
+
+  /* Product Info */
+  .pdp-info {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 1rem;
   }
 
-  .product-header {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  .product-title {
-    font-size: 2rem;
+  .pdp-title {
+    font-size: 1.75rem;
     font-weight: 700;
     color: #1a1a1a;
     margin: 0;
+    line-height: 1.2;
   }
 
-  .product-summary {
-    font-size: 1.1rem;
+  .pdp-summary {
+    font-size: 1rem;
     color: #666;
-    line-height: 1.6;
+    line-height: 1.5;
     margin: 0;
   }
 
-  .product-pricing {
+  .pdp-physical-state {
+    padding: 0.75rem 1rem;
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    font-size: 0.875rem;
+  }
+
+  .pdp-state-value {
+    color: #0d47a1;
+    font-weight: 600;
+    text-transform: capitalize;
+  }
+
+  /* Presentations */
+  .pdp-presentations {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+  }
+
+  .pdp-label {
+    font-weight: 600;
+    font-size: 0.9375rem;
+    color: #374151;
+  }
+
+  .pdp-select {
+    padding: 0.75rem 1rem;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    background: white;
+    font-size: 0.9375rem;
+    cursor: pointer;
+  }
+
+  .pdp-select:focus {
+    outline: none;
+    border-color: #0d47a1;
+    box-shadow: 0 0 0 3px rgba(13, 71, 161, 0.1);
+  }
+
+  .pdp-pres-note {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin: 0;
+  }
+
+  /* Actions */
+  .pdp-actions {
+    display: flex;
+    gap: 1rem;
+  }
+
+  .pdp-actions .btn {
+    flex: 1;
+    padding: 0.875rem 1.25rem;
+    font-size: 0.9375rem;
+  }
+
+  /* Info Description */
+  .pdp-info-description {
     padding: 1rem;
     background: white;
     border-radius: 8px;
-    border: 1px solid #e0e0e0;
+    border: 1px solid #e5e7eb;
   }
 
-  .price-section {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-  }
-
-  .price {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #2563eb;
-  }
-
-  .sale-badge {
-    background: #dc2626;
-    color: white;
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-    font-size: 0.875rem;
+  .pdp-info-description h3 {
+    font-size: 0.9375rem;
     font-weight: 600;
-  }
-
-  .stock-section {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  .stock {
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-    font-size: 0.875rem;
-    font-weight: 600;
-  }
-
-  .stock.is-available {
-    background: #dcfce7;
-    color: #166534;
-  }
-
-  .stock.is-backorder {
-    background: #fef3c7;
-    color: #92400e;
-  }
-
-  .stock.is-unavailable {
-    background: #fee2e2;
-    color: #991b1b;
-  }
-
-  .stock.is-unknown {
-    background: #f3f4f6;
-    color: #6b7280;
-  }
-
-  .stock-quantity {
-    font-size: 0.875rem;
-    color: #666;
-  }
-
-  .product-categories h3 {
-    font-size: 1rem;
-    font-weight: 600;
+    color: #1a1a1a;
     margin: 0 0 0.5rem 0;
-    color: #374151;
   }
 
-  .category-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    list-style: none;
+  .pdp-info-description p {
+    font-size: 0.875rem;
+    line-height: 1.6;
+    color: #4b5563;
     margin: 0;
-    padding: 0;
   }
 
-  .category-item {
-    background: #e5e7eb;
-    padding: 0.25rem 0.75rem;
-    border-radius: 16px;
-    font-size: 0.875rem;
-  }
-
-  .product-sku {
-    font-size: 0.875rem;
-    color: #666;
-  }
-
-  .product-presentations {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  .product-presentations label {
-    font-weight: 600;
-    color: #374151;
-  }
-
-  .product-presentations select {
-    padding: 0.75rem;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
+  /* Details Section */
+  .pdp-details {
+    padding: 1.5rem 0;
     background: white;
-    font-size: 1rem;
   }
 
-  .presentation-note {
-    font-size: 0.875rem;
-    color: #666;
-    margin: 0;
-  }
-
-  .product-actions {
-    display: flex;
-    gap: 1rem;
-    flex-wrap: wrap;
-  }
-
-  .btn {
-    padding: 0.75rem 1.5rem;
-    border-radius: 6px;
-    font-weight: 600;
-    text-decoration: none;
-    border: none;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .btn-primary {
-    background: #2563eb;
-    color: white;
-  }
-
-  .btn-primary:hover {
-    background: #1d4ed8;
-  }
-
-  .btn-outline {
-    background: transparent;
-    color: #2563eb;
-    border: 1px solid #2563eb;
-  }
-
-  .btn-outline:hover {
-    background: #2563eb;
-    color: white;
-  }
-
-  .product-details {
-    padding: 3rem 0;
-  }
-
-  .details-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 2rem;
-  }
-
-  .detail-section {
+  .pdp-section {
     background: white;
     padding: 1.5rem;
-    border-radius: 8px;
-    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    margin-bottom: 1.5rem;
   }
 
-  .detail-section h2 {
-    font-size: 1.25rem;
-    font-weight: 600;
-    margin: 0 0 1rem 0;
+  .pdp-section h2 {
+    font-size: 1.375rem;
+    font-weight: 700;
     color: #1a1a1a;
-  }
-
-  .description-content p {
-    line-height: 1.6;
-    color: #374151;
     margin: 0 0 1rem 0;
   }
 
-  .specifications {
+  .pdp-description p {
+    font-size: 1.0625rem;
+    line-height: 1.8;
+    color: #4b5563;
+    margin: 0;
+  }
+
+  /* Related Products */
+  .pdp-related-header {
+    margin-bottom: 1.5rem;
+  }
+
+  .pdp-related-header h2 {
+    margin-top: 0.5rem;
+  }
+
+  .pdp-carousel {
+    display: flex;
+    gap: 1.5rem;
+    overflow-x: auto;
+    padding-bottom: 1rem;
+  }
+
+  .pdp-related-card {
+    flex: 0 0 280px;
+    min-width: 280px;
+    max-width: 280px;
+    height: 460px;
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
   }
 
-  .spec-item {
+  .pdp-related-img {
+    width: 100%;
+    height: 180px;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #f3f4f6;
+    flex-shrink: 0;
+  }
+
+  .pdp-related-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .pdp-related-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-height: 0;
+  }
+
+  .pdp-related-body h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .pdp-related-desc {
     font-size: 0.875rem;
-    color: #374151;
+    line-height: 1.5;
+    color: #6b7280;
+    margin: 0;
   }
 
-  .attributes-list {
-    margin: 0.5rem 0 0 0;
-    padding-left: 1rem;
+  .pdp-related-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-shrink: 0;
   }
 
-  .attributes-list li {
-    margin: 0.25rem 0;
+  .pdp-related-actions .btn {
+    flex: 1;
+    font-size: 0.875rem;
+    padding: 0.625rem 1rem;
   }
 
-  .benefits-list {
+  /* Ficha Tecnica */
+  .pdp-ficha {
+    padding: 1.5rem;
+    background: #f9fafb;
+    border-radius: 8px;
+    border: 1px dashed #d1d5db;
+  }
+
+  .pdp-muted {
+    color: #9ca3af;
+    font-style: italic;
+    margin: 0;
+  }
+
+  /* Categories */
+  .pdp-categories {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
     list-style: none;
     margin: 0;
     padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
   }
 
-  .benefit-item {
-    padding: 0.5rem 0;
-    border-bottom: 1px solid #f3f4f6;
-    color: #374151;
-  }
-
-  .benefit-item:last-child {
-    border-bottom: none;
-  }
-
-  .tags-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-  }
-
-  .tags-list .tag {
-    background: #e5e7eb;
-    color: #374151;
-    padding: 0.25rem 0.75rem;
-    border-radius: 16px;
-    font-size: 0.875rem;
-  }
-
-  .additional-info {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  .info-item {
-    font-size: 0.875rem;
-    color: #374151;
-  }
-
-  .muted {
-    color: #9ca3af;
-    font-style: italic;
-  }
-
-  .product-physical-state {
+  .pdp-category {
+    background: rgba(13, 71, 161, 0.08);
+    padding: 0.5rem 1rem;
+    border-radius: 999px;
     font-size: 0.9375rem;
-    color: var(--color-text);
-    margin-bottom: 1rem;
-  }
-
-  .physical-state-value {
-    text-transform: capitalize;
-    color: var(--color-primary);
+    color: #0d47a1;
     font-weight: 600;
   }
 
-  .product-metrics {
-    margin: 1.5rem 0;
-    padding: 1.5rem;
-    background: #f8f9fa;
-    border-radius: 8px;
-  }
-
-  .product-metrics h3 {
-    font-size: 1rem;
-    font-weight: 600;
-    margin: 0 0 1rem 0;
-    color: var(--color-heading);
-  }
-
-  .metrics-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1rem;
-  }
-
-  .metric-item {
-    text-align: center;
-    padding: 1rem;
-    background: white;
-    border-radius: 6px;
-  }
-
-  .metric-value {
-    display: block;
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--color-primary);
-    margin-bottom: 0.25rem;
-  }
-
-  .metric-label {
-    display: block;
-    font-size: 0.875rem;
-    color: var(--color-muted);
-  }
-
+  /* Mobile */
   @media (max-width: 768px) {
-    .product-hero .container {
+    .pdp-hero .container {
       grid-template-columns: 1fr;
       gap: 2rem;
     }
 
-    .details-grid {
-      grid-template-columns: 1fr;
-      gap: 1.5rem;
-    }
-
-    .product-actions {
+    .pdp-actions {
       flex-direction: column;
     }
 
-    .btn {
+    .pdp-actions .btn {
       width: 100%;
     }
 
-    .metrics-grid {
-      grid-template-columns: 1fr;
+    .pdp-related-card {
+      flex: 0 0 240px;
+      min-width: 240px;
+      max-width: 240px;
     }
   }
 </style>
 
 <script>
   document.addEventListener("DOMContentLoaded", () => {
+    // Presentation select handler
     const select = document.querySelector("[data-product-select]");
     const notes = document.querySelectorAll("[data-presentation-note]");
     const button = document.querySelector(
@@ -807,5 +601,55 @@ const stockClass = getStockClass(product.stockStatus);
 
     select?.addEventListener("change", updateFromSelect);
     updateFromSelect();
+
+    // Image carousel handler
+    const currentImage = document.getElementById("pdp-current-image");
+    const thumbnails = document.querySelectorAll(".pdp-thumbnail");
+    const prevBtn = document.getElementById("pdp-prev");
+    const nextBtn = document.getElementById("pdp-next");
+
+    if (thumbnails.length > 0) {
+      let currentIndex = 0;
+
+      const showImage = (index: number) => {
+        if (!currentImage || !(currentImage instanceof HTMLImageElement))
+          return;
+
+        const thumbnail = thumbnails[index];
+        if (!thumbnail) return;
+
+        const fullSrc = thumbnail.getAttribute("data-full-src");
+        const alt = thumbnail.getAttribute("alt");
+
+        if (fullSrc) {
+          currentImage.src = fullSrc;
+          if (alt) currentImage.alt = alt;
+        }
+
+        // Update active thumbnail
+        thumbnails.forEach((thumb, i) => {
+          thumb.setAttribute("data-active", i === index ? "true" : "false");
+        });
+
+        currentIndex = index;
+      };
+
+      // Thumbnail click
+      thumbnails.forEach((thumb, index) => {
+        thumb.addEventListener("click", () => showImage(index));
+      });
+
+      // Navigation buttons
+      prevBtn?.addEventListener("click", () => {
+        const newIndex =
+          (currentIndex - 1 + thumbnails.length) % thumbnails.length;
+        showImage(newIndex);
+      });
+
+      nextBtn?.addEventListener("click", () => {
+        const newIndex = (currentIndex + 1) % thumbnails.length;
+        showImage(newIndex);
+      });
+    }
   });
 </script>

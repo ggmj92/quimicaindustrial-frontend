@@ -23,12 +23,15 @@
 .site-footer .brand {
   display: inline-block;
   margin-bottom: 1rem;
+  background: transparent;
+  padding: 0;
 }
 
 .site-footer .brand-logo {
   height: 40px;
   width: auto;
   display: block;
+  background: transparent;
 }
 
 .site-footer h3 {

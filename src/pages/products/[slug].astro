@@ -42,63 +42,9 @@ const relatedProducts = (await getRelatedProducts(product.slug)).filter(
   description={product.summary}
   canonical={`https://www.quimicaindustrial.pe/products/${product.slug}`}
 >
-  <ProductDetail product={product} categories={productCategories} />
-
-  <section class="related-products">
-    <div class="container">
-      <header class="section-header">
-        <div>
-          <span class="tag">También te puede interesar</span>
-          <h2>Productos relacionados</h2>
-        </div>
-      </header>
-      {
-        relatedProducts.length ? (
-          <div class="carousel">
-            {relatedProducts.map((item) => {
-              const presentation = item.presentations[0];
-              return (
-                <article class="card carousel-item related-card">
-                  <div class="related-image">
-                    {item.image ? (
-                      <img src={item.image} alt={item.name} loading="lazy" />
-                    ) : (
-                      <div class="image-fallback" aria-hidden="true" />
-                    )}
-                  </div>
-                  <div class="related-body">
-                    <h3>{item.name}</h3>
-                    <p class="related-reason">
-                      {item.relationshipReason ||
-                        "Producto relacionado complementario para tu industria."}
-                    </p>
-                  </div>
-                  <div class="related-actions">
-                    <a class="btn btn-outline" href={`/products/${item.slug}`}>
-                      Ver detalle
-                    </a>
-                    <button
-                      class="btn btn-primary"
-                      type="button"
-                      data-action="add-to-cart"
-                      data-product-id={item.id}
-                      data-product-name={item.name}
-                      data-product-slug={item.slug}
-                      data-product-presentation={presentation?.label || ""}
-                      data-presentation-id={presentation?.id || ""}
-                      data-product-image={item.image}
-                    >
-                      Agregar
-                    </button>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-        ) : (
-          <p class="muted">No encontramos productos relacionados.</p>
-        )
-      }
-    </div>
-  </section>
+  <ProductDetail
+    product={product}
+    categories={productCategories}
+    relatedProducts={relatedProducts}
+  />
 </Layout>
