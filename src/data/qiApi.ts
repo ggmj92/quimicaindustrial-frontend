@@ -2,7 +2,8 @@
 // Replaces WooCommerce with our new backend
 
 const API_BASE =
-  import.meta.env.PUBLIC_QI_API_URL || "http://localhost:5001/api/qi";
+  import.meta.env.PUBLIC_QI_API_URL ||
+  "https://oregonchem-backend.onrender.com/api/qi";
 
 // Debug: Log which API we're using
 console.log("🔍 QI API Base URL:", API_BASE);

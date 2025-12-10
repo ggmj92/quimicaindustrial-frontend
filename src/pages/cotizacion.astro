@@ -14,87 +14,198 @@ const serializedProducts = JSON.stringify(products);
 >
   <section class="quote">
     <div class="container quote-layout">
-      <div class="quote-summary">
-        <span class="tag">Tu selección</span>
-        <h1>Carrito de cotización</h1>
-        <p>
-          Ajusta cantidades, elimina productos o añade nuevos ítems antes de
-          enviar tu solicitud. Los datos se sincronizan con WooCommerce para que
-          tu WordPress se mantenga actualizado.
+      <form class="quote-form" data-quote-form>
+        <h1>Solicitud de Cotización</h1>
+        <p class="quote-intro">
+          Complete el formulario con los productos que necesita y sus datos de
+          contacto. Nos comunicaremos con usted a la brevedad.
         </p>
-        <div class="quote-totals">
-          <strong data-quote-total-items>0</strong>
-          <span>productos en la cotización</span>
+
+        <!-- Product List Section -->
+        <div class="form-section">
+          <h2>Productos a Cotizar</h2>
+          <div class="product-table">
+            <div class="product-table-header">
+              <div class="product-header-cell">Producto</div>
+              <div class="product-header-cell">Presentación</div>
+              <div class="product-header-cell">Cantidad/Unidades</div>
+              <div class="product-header-cell">Frecuencia de compra</div>
+              <div class="product-header-cell"></div>
+            </div>
+            <div class="product-list" data-product-list>
+              <!-- Product items will be added here dynamically -->
+            </div>
+          </div>
+          <button type="button" class="btn btn-outline" data-add-product>
+            + Agregar Más Productos
+          </button>
         </div>
-        <div class="quote-add">
-          <label for="quote-product">Añadir otro producto</label>
-          <div class="quote-add-control">
-            <select id="quote-product" data-quote-selector>
-              <option value="">Selecciona un producto</option>
-              {
-                products.map((product) => (
-                  <option value={product.id} data-slug={product.slug}>
-                    {product.name}
-                  </option>
-                ))
-              }
+
+        <!-- Client Information Section -->
+        <div class="form-section">
+          <h2>Información del Cliente</h2>
+
+          <label>
+            Tipo de Cliente
+            <select name="clientType" data-client-type required>
+              <option value="">Seleccione una opción</option>
+              <option value="natural">Persona Natural</option>
+              <option value="empresa">Empresa</option>
+              <option value="natural-empresa">Persona con Empresa</option>
             </select>
-            <button type="button" class="btn btn-outline" data-quote-add
-              >Agregar</button
+          </label>
+
+          <div class="client-fields" data-client-fields>
+            <!-- Personal fields -->
+            <div
+              class="personal-fields"
+              data-personal-fields
+              style="display: none;"
             >
+              <label>
+                Nombre
+                <input type="text" name="firstName" placeholder="Nombre" />
+              </label>
+              <label>
+                Apellidos
+                <input type="text" name="lastName" placeholder="Apellidos" />
+              </label>
+              <label>
+                DNI
+                <input
+                  type="text"
+                  name="dni"
+                  placeholder="12345678"
+                  pattern="[0-9]{8}"
+                />
+              </label>
+              <label>
+                Celular
+                <input type="tel" name="phone" placeholder="+51 999 999 999" />
+              </label>
+              <label>
+                Email
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="correo@ejemplo.com"
+                />
+              </label>
+            </div>
+
+            <!-- Company fields -->
+            <div
+              class="company-fields"
+              data-company-fields
+              style="display: none;"
+            >
+              <h3>Información de la Empresa</h3>
+              <label>
+                Razón Social
+                <input
+                  type="text"
+                  name="companyName"
+                  placeholder="Nombre de la empresa"
+                />
+              </label>
+              <label>
+                RUC
+                <input
+                  type="text"
+                  name="ruc"
+                  placeholder="20123456789"
+                  pattern="[0-9]{11}"
+                />
+              </label>
+            </div>
           </div>
         </div>
-        <div data-quote-items></div>
-      </div>
 
-      <form class="quote-form" data-quote-form>
-        <h2>Datos de contacto</h2>
-        <label>
-          Nombre completo
-          <input
-            type="text"
-            name="name"
-            placeholder="Nombre y apellido"
-            required
-          />
-        </label>
-        <label>
-          Empresa
-          <input
-            type="text"
-            name="company"
-            placeholder="Nombre de la empresa"
-          />
-        </label>
-        <label>
-          Correo electrónico
-          <input
-            type="email"
-            name="email"
-            placeholder="correo@empresa.com"
-            required
-          />
-        </label>
-        <label>
-          Teléfono
-          <input type="tel" name="phone" placeholder="+51 999 999 999" />
-        </label>
-        <label>
-          Comentarios adicionales
-          <textarea
-            name="message"
-            rows="4"
-            placeholder="Indica volúmenes, condiciones de entrega u otros detalles"
-          ></textarea>
-        </label>
-        <button type="submit" class="btn btn-primary">Enviar solicitud</button>
+        <!-- Contact Preference Section -->
+        <div class="form-section">
+          <h3>¿Cómo prefiero que me contacten?</h3>
+          <div class="contact-preferences">
+            <label class="checkbox-button">
+              <input type="checkbox" name="contactEmail" value="email" />
+              <span>Email</span>
+            </label>
+            <label class="checkbox-button">
+              <input type="checkbox" name="contactWhatsapp" value="whatsapp" />
+              <span>WhatsApp</span>
+            </label>
+            <label class="checkbox-button">
+              <input type="checkbox" name="contactPhone" value="llamada" />
+              <span>Llamada</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Additional Comments -->
+        <div class="form-section">
+          <label>
+            Observaciones / Comentarios
+            <textarea
+              name="comments"
+              rows="4"
+              placeholder="Indique cualquier detalle adicional sobre su solicitud"
+            ></textarea>
+          </label>
+        </div>
+
+        <!-- Terms and Conditions -->
+        <div class="form-section terms-section">
+          <label class="checkbox">
+            <input type="checkbox" name="acceptTerms" required />
+            <span>
+              He leído los <a href="/terminos-condiciones" target="_blank"
+                >términos y condiciones</a
+              >
+            </span>
+          </label>
+          <label class="checkbox">
+            <input type="checkbox" name="acceptPrivacy" required />
+            <span>
+              Acepto la <a href="/politica-privacidad" target="_blank"
+                >política de privacidad</a
+              >
+            </span>
+          </label>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="btn btn-primary btn-large">
+          Enviar Cotización
+        </button>
+
         <p class="quote-feedback" data-quote-feedback hidden>
-          ¡Gracias! Hemos recibido tu solicitud. Nos comunicaremos contigo en
-          las próximas horas.
+          ¡Gracias! Hemos recibido tu solicitud de cotización. Nos comunicaremos
+          contigo en las próximas horas.
         </p>
       </form>
     </div>
   </section>
+
+  <!-- Confirmation Modal -->
+  <div class="modal-overlay" data-confirm-modal hidden>
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3>Confirmar eliminación</h3>
+      </div>
+      <div class="modal-body">
+        <p data-confirm-message>
+          ¿Está seguro que desea eliminar este producto de la cotización?
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" data-confirm-cancel>
+          Cancelar
+        </button>
+        <button type="button" class="btn btn-danger" data-confirm-ok>
+          Eliminar
+        </button>
+      </div>
+    </div>
+  </div>
 
   <script
     type="application/json"
@@ -115,44 +226,660 @@ const serializedProducts = JSON.stringify(products);
       }
     }
 
-    const selector = document.querySelector("[data-quote-selector]");
-    const addButton = document.querySelector("[data-quote-add]");
+    const productList = document.querySelector("[data-product-list]");
+    const addProductBtn = document.querySelector("[data-add-product]");
+    const clientTypeSelect = document.querySelector("[data-client-type]");
+    const personalFields = document.querySelector("[data-personal-fields]");
+    const companyFields = document.querySelector("[data-company-fields]");
     const form = document.querySelector("[data-quote-form]");
     const feedback = document.querySelector("[data-quote-feedback]");
 
-    addButton?.addEventListener("click", () => {
-      if (!(selector instanceof HTMLSelectElement) || !selector.value) return;
-      const product = catalog.find((item) => item.id === selector.value);
-      if (!product) return;
-      const presentation = product.presentations[0];
-      const payload = {
-        productId: product.id,
-        presentationId: presentation?.id || "",
-        name: product.name,
-        presentation: presentation?.label || "",
-        image: product.image,
-        slug: product.slug,
-        quantity: 1,
-        price: product.price ?? "",
-        priceText: product.priceText ?? "",
-        stockStatus: product.stockStatus,
-      };
-      if (window.qiCart?.add) {
-        window.qiCart.add(payload);
-        document.dispatchEvent(new CustomEvent("qi-cart-open"));
-      }
-      selector.value = "";
+    // Modal elements
+    const confirmModal = document.querySelector("[data-confirm-modal]");
+    const confirmOkBtn = document.querySelector("[data-confirm-ok]");
+    const confirmCancelBtn = document.querySelector("[data-confirm-cancel]");
+    const confirmMessage = document.querySelector("[data-confirm-message]");
+
+    let productCounter = 0;
+    let confirmResolve = null;
+
+    // Custom confirm function
+    const showConfirm = (message) => {
+      return new Promise((resolve) => {
+        confirmResolve = resolve;
+        if (confirmMessage) confirmMessage.textContent = message;
+        if (confirmModal) confirmModal.removeAttribute("hidden");
+        document.body.style.overflow = "hidden";
+      });
+    };
+
+    const hideConfirm = () => {
+      if (confirmModal) confirmModal.setAttribute("hidden", "");
+      document.body.style.overflow = "";
+    };
+
+    confirmOkBtn?.addEventListener("click", () => {
+      hideConfirm();
+      if (confirmResolve) confirmResolve(true);
     });
 
-    form?.addEventListener("submit", (event) => {
+    confirmCancelBtn?.addEventListener("click", () => {
+      hideConfirm();
+      if (confirmResolve) confirmResolve(false);
+    });
+
+    // Close modal on overlay click
+    confirmModal?.addEventListener("click", (e) => {
+      if (e.target === confirmModal) {
+        hideConfirm();
+        if (confirmResolve) confirmResolve(false);
+      }
+    });
+
+    // Create a product item row
+    const createProductItem = (initialProduct = null) => {
+      productCounter++;
+      const itemId = `product-${productCounter}`;
+
+      const item = document.createElement("div");
+      item.className = "product-item";
+      item.dataset.productItem = itemId;
+
+      // Sort products alphabetically for easier searching
+      const sortedCatalog = [...catalog].sort((a, b) =>
+        a.name.localeCompare(b.name, "es"),
+      );
+
+      // Get presentations for initial product if any
+      let presentationOptions =
+        '<option value="">Seleccione presentación</option>';
+      if (
+        initialProduct &&
+        initialProduct.presentations &&
+        initialProduct.presentations.length > 0
+      ) {
+        initialProduct.presentations.forEach((pres) => {
+          presentationOptions += `<option value="${pres.id}">${pres.label}</option>`;
+        });
+      }
+
+      item.innerHTML = `
+        <div class="product-item-row">
+          <div class="product-item-cell">
+            <div class="search-select-wrapper" data-search-wrapper>
+              <input 
+                type="text" 
+                class="search-select-input" 
+                placeholder="Buscar o seleccionar producto..."
+                data-product-search
+                autocomplete="off"
+              />
+              <input 
+                type="hidden" 
+                name="products[${productCounter}][productId]" 
+                data-product-select 
+                required
+              />
+            </div>
+          </div>
+          
+          <div class="product-item-cell">
+            <select name="products[${productCounter}][presentationId]" data-presentation-select ${!initialProduct || !initialProduct.presentations?.length ? "disabled" : ""}>
+              ${presentationOptions}
+            </select>
+          </div>
+          
+          <div class="product-item-cell">
+            <input type="number" name="products[${productCounter}][quantity]" min="1" value="1" required />
+          </div>
+          
+          <div class="product-item-cell">
+            <select name="products[${productCounter}][frequency]" required>
+              <option value="unica">Única compra</option>
+              <option value="quincenal">Quincenal</option>
+              <option value="mensual">Mensual</option>
+              <option value="bimestral">Bimestral</option>
+              <option value="trimestral">Trimestral</option>
+            </select>
+          </div>
+          
+          <div class="product-item-cell">
+            <button type="button" class="btn-remove" data-remove-product title="Eliminar producto">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 6L6 18M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      `;
+
+      // Setup searchable dropdown
+      const productSearchInput = item.querySelector("[data-product-search]");
+      const productSelect = item.querySelector("[data-product-select]");
+      const searchWrapper = item.querySelector("[data-search-wrapper]");
+      const presentationSelect = item.querySelector(
+        "[data-presentation-select]",
+      );
+
+      // Create dropdown and append to body
+      const productDropdown = document.createElement("div");
+      productDropdown.className = "search-select-dropdown";
+      productDropdown.setAttribute("hidden", "");
+      const productOptions = document.createElement("div");
+      productOptions.className = "search-select-options";
+      productDropdown.appendChild(productOptions);
+      document.body.appendChild(productDropdown);
+
+      // Populate dropdown options
+      const renderProductOptions = (filter = "") => {
+        if (!productOptions) return;
+
+        const filterLower = filter
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "");
+        const filtered = sortedCatalog.filter((product) => {
+          const nameLower = product.name
+            .toLowerCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "");
+          return nameLower.includes(filterLower);
+        });
+
+        productOptions.innerHTML = "";
+
+        if (filtered.length === 0) {
+          productOptions.innerHTML =
+            '<div class="search-select-option no-results">No se encontraron productos</div>';
+          return;
+        }
+
+        // Show all products (no limit)
+        filtered.forEach((product) => {
+          const option = document.createElement("div");
+          option.className = "search-select-option";
+          option.textContent = product.name;
+          option.dataset.productId = product.id;
+          option.addEventListener("click", () => selectProduct(product));
+          productOptions.appendChild(option);
+        });
+      };
+
+      // Select product function
+      const selectProduct = (product) => {
+        if (productSearchInput instanceof HTMLInputElement) {
+          productSearchInput.value = product.name;
+        }
+        if (productSelect instanceof HTMLInputElement) {
+          productSelect.value = product.id;
+        }
+        if (productDropdown) {
+          productDropdown.setAttribute("hidden", "");
+        }
+
+        // Update presentations
+        updatePresentations(product);
+      };
+
+      // Update presentations based on selected product
+      const updatePresentations = (product) => {
+        if (
+          product &&
+          product.presentations &&
+          product.presentations.length > 0
+        ) {
+          presentationSelect.disabled = false;
+          presentationSelect.innerHTML =
+            '<option value="">Seleccione presentación</option>';
+          product.presentations.forEach((pres) => {
+            const option = document.createElement("option");
+            option.value = pres.id;
+            option.textContent = pres.label;
+            presentationSelect.appendChild(option);
+          });
+        } else {
+          presentationSelect.disabled = true;
+          presentationSelect.innerHTML =
+            '<option value="">Sin presentaciones disponibles</option>';
+        }
+      };
+
+      // Set initial product if provided
+      if (initialProduct) {
+        selectProduct(initialProduct);
+      }
+
+      // Initialize dropdown with all products on first render
+      renderProductOptions("");
+
+      // Position dropdown function
+      const positionDropdown = () => {
+        if (productSearchInput instanceof HTMLElement) {
+          const rect = productSearchInput.getBoundingClientRect();
+          productDropdown.style.position = "fixed";
+          productDropdown.style.top = `${rect.bottom + 4}px`;
+          productDropdown.style.left = `${rect.left}px`;
+          productDropdown.style.width = `${Math.max(rect.width, 300)}px`;
+        }
+      };
+
+      // Search input events
+      productSearchInput?.addEventListener("input", (e) => {
+        const value = (e.target as HTMLInputElement).value;
+        renderProductOptions(value);
+        positionDropdown();
+        if (productDropdown) {
+          productDropdown.removeAttribute("hidden");
+        }
+      });
+
+      productSearchInput?.addEventListener("focus", () => {
+        const currentValue =
+          productSearchInput instanceof HTMLInputElement
+            ? productSearchInput.value
+            : "";
+        renderProductOptions(currentValue);
+        positionDropdown();
+        if (productDropdown) {
+          productDropdown.removeAttribute("hidden");
+        }
+      });
+
+      productSearchInput?.addEventListener("click", () => {
+        positionDropdown();
+        if (productDropdown) {
+          productDropdown.removeAttribute("hidden");
+        }
+      });
+
+      // Reposition on scroll/resize
+      window.addEventListener(
+        "scroll",
+        () => {
+          if (!productDropdown.hasAttribute("hidden")) {
+            positionDropdown();
+          }
+        },
+        true,
+      );
+
+      window.addEventListener("resize", () => {
+        if (!productDropdown.hasAttribute("hidden")) {
+          positionDropdown();
+        }
+      });
+
+      // Close dropdown when clicking outside
+      document.addEventListener("click", (e) => {
+        if (!item.contains(e.target as Node)) {
+          if (productDropdown) {
+            productDropdown.setAttribute("hidden", "");
+          }
+        }
+      });
+
+      // Old change handler (now handled by selectProduct)
+      productSelect?.addEventListener("change", (e) => {
+        const selectedProductId = (e.target as HTMLSelectElement).value;
+        const selectedProduct = catalog.find((p) => p.id === selectedProductId);
+
+        if (
+          selectedProduct &&
+          selectedProduct.presentations &&
+          selectedProduct.presentations.length > 0
+        ) {
+          presentationSelect.disabled = false;
+          presentationSelect.innerHTML =
+            '<option value="">Seleccione presentación</option>';
+          selectedProduct.presentations.forEach((pres) => {
+            const option = document.createElement("option");
+            option.value = pres.id;
+            option.textContent = pres.label;
+            presentationSelect.appendChild(option);
+          });
+        } else {
+          presentationSelect.disabled = true;
+          presentationSelect.innerHTML =
+            '<option value="">Sin presentaciones disponibles</option>';
+        }
+      });
+
+      // Add event listener for remove button
+      const removeBtn = item.querySelector("[data-remove-product]");
+      removeBtn?.addEventListener("click", async () => {
+        // Show custom confirmation dialog
+        const confirmed = await showConfirm(
+          "¿Está seguro que desea eliminar este producto de la cotización?",
+        );
+        if (!confirmed) {
+          return;
+        }
+
+        // Get the selected product ID and presentation ID
+        const productSelect = item.querySelector("[data-product-select]");
+        const presentationSelect = item.querySelector(
+          "[data-presentation-select]",
+        );
+
+        if (productSelect instanceof HTMLSelectElement) {
+          const productId = productSelect.value;
+          const presentationId =
+            presentationSelect instanceof HTMLSelectElement
+              ? presentationSelect.value
+              : "";
+
+          // Remove from cart if it exists
+          if (productId && window.qiCart?.remove) {
+            const cartItem = {
+              productId: productId,
+              presentationId: presentationId,
+            };
+            window.qiCart.remove(cartItem);
+          }
+        }
+
+        // Remove the item from the form
+        item.remove();
+
+        // If no products left, add one empty row
+        if (!productList?.querySelector("[data-product-item]")) {
+          productList?.appendChild(createProductItem());
+        }
+      });
+
+      return item;
+    };
+
+    // Load cart items and prefill form
+    const loadCartItems = () => {
+      const cartItems = window.qiCart?.getItems ? window.qiCart.getItems() : [];
+
+      if (cartItems.length > 0) {
+        // Add a product item for each cart item
+        cartItems.forEach((cartItem) => {
+          const product = catalog.find((p) => p.id === cartItem.productId);
+          if (product) {
+            const item = createProductItem(product);
+            productList?.appendChild(item);
+
+            // Set the presentation if it exists
+            if (cartItem.presentationId) {
+              const presentationSelect = item.querySelector(
+                "[data-presentation-select]",
+              );
+              if (presentationSelect instanceof HTMLSelectElement) {
+                presentationSelect.value = cartItem.presentationId;
+              }
+            }
+
+            // Set quantity
+            if (cartItem.quantity) {
+              const quantityInput = item.querySelector('input[type="number"]');
+              if (quantityInput instanceof HTMLInputElement) {
+                quantityInput.value = String(cartItem.quantity);
+              }
+            }
+          }
+        });
+      } else {
+        // No cart items, add one empty row
+        productList?.appendChild(createProductItem());
+      }
+    };
+
+    // Load cart items on page load
+    loadCartItems();
+
+    // Add product button handler
+    addProductBtn?.addEventListener("click", () => {
+      productList?.appendChild(createProductItem());
+    });
+
+    // Client type change handler
+    clientTypeSelect?.addEventListener("change", (e) => {
+      const value = (e.target as HTMLSelectElement).value;
+
+      if (value === "natural") {
+        // Persona Natural: Show only personal fields
+        personalFields.style.display = "grid";
+        companyFields.style.display = "none";
+        // Make personal fields required
+        personalFields.querySelectorAll("input").forEach((input) => {
+          input.setAttribute("required", "");
+        });
+        // Remove required from company fields
+        companyFields.querySelectorAll("input").forEach((input) => {
+          input.removeAttribute("required");
+        });
+      } else if (value === "empresa" || value === "natural-empresa") {
+        // Empresa OR Persona con Empresa: Show ALL fields (personal + company)
+        personalFields.style.display = "grid";
+        companyFields.style.display = "grid";
+        // Make all fields required
+        personalFields.querySelectorAll("input").forEach((input) => {
+          input.setAttribute("required", "");
+        });
+        companyFields.querySelectorAll("input").forEach((input) => {
+          input.setAttribute("required", "");
+        });
+      } else {
+        personalFields.style.display = "none";
+        companyFields.style.display = "none";
+      }
+    });
+
+    // Form submission handler
+    form?.addEventListener("submit", async (event) => {
       event.preventDefault();
-      const items = window.qiCart?.getItems ? window.qiCart.getItems() : [];
-      if (!items.length) {
-        alert("Agrega al menos un producto antes de enviar la cotización.");
+
+      // 1. Validate at least one product with all required fields
+      const productItems = productList?.querySelectorAll("[data-product-item]");
+      if (!productItems || productItems.length === 0) {
+        alert("Debe agregar al menos un producto para cotizar.");
         return;
       }
-      feedback?.removeAttribute("hidden");
-      form.reset();
+
+      // Check each product has all required fields filled
+      let hasValidProduct = false;
+      for (const item of productItems) {
+        const productId = item.querySelector("[data-product-select]")?.value;
+        const quantity = item.querySelector('input[type="number"]')?.value;
+        const frequency = item.querySelector(
+          'select[name*="frequency"]',
+        )?.value;
+
+        if (productId && quantity && frequency) {
+          hasValidProduct = true;
+          break;
+        }
+      }
+
+      if (!hasValidProduct) {
+        alert(
+          "Debe completar al menos un producto con todos sus datos (nombre, presentación si aplica, cantidad y frecuencia de compra).",
+        );
+        return;
+      }
+
+      // 2. Validate client type is selected
+      const clientType = clientTypeSelect?.value;
+      if (!clientType) {
+        alert("Por favor, seleccione el tipo de cliente.");
+        return;
+      }
+
+      // 3. Validate contact info based on client type
+      if (clientType === "natural") {
+        const firstName = form.querySelector('input[name="firstName"]')?.value;
+        const lastName = form.querySelector('input[name="lastName"]')?.value;
+        const dni = form.querySelector('input[name="dni"]')?.value;
+        const phone = form.querySelector('input[name="phone"]')?.value;
+        const email = form.querySelector('input[name="email"]')?.value;
+
+        if (!firstName || !lastName || !dni || !phone || !email) {
+          alert(
+            "Por favor, complete todos los campos de información personal.",
+          );
+          return;
+        }
+      } else if (clientType === "empresa" || clientType === "natural-empresa") {
+        const firstName = form.querySelector('input[name="firstName"]')?.value;
+        const lastName = form.querySelector('input[name="lastName"]')?.value;
+        const dni = form.querySelector('input[name="dni"]')?.value;
+        const phone = form.querySelector('input[name="phone"]')?.value;
+        const email = form.querySelector('input[name="email"]')?.value;
+        const companyName = form.querySelector(
+          'input[name="companyName"]',
+        )?.value;
+        const ruc = form.querySelector('input[name="ruc"]')?.value;
+
+        if (
+          !firstName ||
+          !lastName ||
+          !dni ||
+          !phone ||
+          !email ||
+          !companyName ||
+          !ruc
+        ) {
+          alert(
+            "Por favor, complete todos los campos de información personal y de empresa.",
+          );
+          return;
+        }
+      }
+
+      // 4. Validate at least one contact preference
+      const contactPreferences = form.querySelectorAll(
+        'input[name^="contact"]:checked',
+      );
+      if (contactPreferences.length === 0) {
+        alert(
+          "Por favor, seleccione al menos una forma de contacto preferida.",
+        );
+        return;
+      }
+
+      // 5. Validate both checkboxes are checked
+      const acceptTerms = form.querySelector(
+        'input[name="acceptTerms"]',
+      )?.checked;
+      const acceptPrivacy = form.querySelector(
+        'input[name="acceptPrivacy"]',
+      )?.checked;
+
+      if (!acceptTerms || !acceptPrivacy) {
+        alert(
+          "Debe aceptar los términos y condiciones y la política de privacidad para continuar.",
+        );
+        return;
+      }
+
+      // Show custom confirmation dialog
+      const confirmed = await showConfirm("¿Confirmar envío de cotización?");
+      if (!confirmed) {
+        return;
+      }
+
+      // Collect form data
+      const formData = new FormData(form);
+
+      // Build products array
+      const products = [];
+      const productItems = productList?.querySelectorAll("[data-product-item]");
+      productItems?.forEach((item) => {
+        const productId = item.querySelector("[data-product-select]")?.value;
+        const presentationSelect = item.querySelector(
+          'select[name*="presentationId"]',
+        );
+        const presentationId = presentationSelect?.value || null;
+        const presentationLabel =
+          presentationSelect?.selectedOptions[0]?.text || "N/A";
+        const quantity = item.querySelector('input[type="number"]')?.value;
+        const frequency = item.querySelector(
+          'select[name*="frequency"]',
+        )?.value;
+
+        if (productId && quantity && frequency) {
+          products.push({
+            productId,
+            presentationId,
+            presentationLabel,
+            quantity: parseInt(quantity),
+            frequency,
+          });
+        }
+      });
+
+      // Build contact preferences
+      const contactPreferences = {
+        email: formData.get("contactEmail") === "on",
+        whatsapp: formData.get("contactWhatsapp") === "on",
+        phone: formData.get("contactPhone") === "on",
+      };
+
+      // Build quote data
+      const quoteData = {
+        clientType: formData.get("clientType"),
+        firstName: formData.get("firstName"),
+        lastName: formData.get("lastName"),
+        dni: formData.get("dni"),
+        phone: formData.get("phone"),
+        email: formData.get("email"),
+        companyName: formData.get("companyName") || null,
+        ruc: formData.get("ruc") || null,
+        products,
+        contactPreferences,
+        observations: formData.get("observations") || "",
+      };
+
+      console.log("Quote data:", quoteData);
+
+      // Send to backend API
+      const API_URL =
+        import.meta.env.PUBLIC_QI_API_URL?.replace("/api/qi", "") ||
+        "https://oregonchem-backend.onrender.com";
+
+      try {
+        const response = await fetch(`${API_URL}/api/qi/quotes`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(quoteData),
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          // Show success message
+          feedback?.removeAttribute("hidden");
+          feedback?.scrollIntoView({ behavior: "smooth", block: "center" });
+
+          // Clear cart
+          if (window.qiCart) {
+            window.qiCart.clearCart();
+          }
+
+          // Reset form after 3 seconds
+          setTimeout(() => {
+            form.reset();
+            feedback?.setAttribute("hidden", "");
+            productList.innerHTML = "";
+            productList?.appendChild(createProductItem());
+            personalFields.style.display = "none";
+            companyFields.style.display = "none";
+          }, 3000);
+        } else {
+          alert(
+            "Error al enviar la cotización: " +
+              (result.error || "Error desconocido"),
+          );
+        }
+      } catch (error) {
+        console.error("Error submitting quote:", error);
+        alert("Error al enviar la cotización. Por favor, intente nuevamente.");
+      }
     });
   });
 </script>

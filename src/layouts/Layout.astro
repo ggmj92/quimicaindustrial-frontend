@@ -330,7 +330,10 @@ const {
           '[data-action="remove-from-cart"]',
         );
         const openTrigger = target.closest('[data-action="open-cart"]');
+        const cartToggle = target.closest("[data-cart-toggle]");
         const closeTrigger = target.closest("[data-cart-close]");
+        const cartOverlay = target.closest("[data-cart-overlay]");
+        const cartDrawer = target.closest(".cart-drawer");
 
         if (addTrigger) {
           const payload = getPayloadFromNode(addTrigger);
@@ -347,11 +350,16 @@ const {
           }
         }
 
-        if (openTrigger) {
+        if (openTrigger || cartToggle) {
           document.dispatchEvent(new CustomEvent("qi-cart-open"));
         }
 
         if (closeTrigger) {
+          document.dispatchEvent(new CustomEvent("qi-cart-close"));
+        }
+
+        // Close cart when clicking on overlay background (not on drawer)
+        if (cartOverlay && !cartDrawer) {
           document.dispatchEvent(new CustomEvent("qi-cart-close"));
         }
       });
