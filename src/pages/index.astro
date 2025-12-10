@@ -7,12 +7,10 @@ import {
   getProducts,
 } from "../data/products";
 import type { Product } from "../data/products";
-import { getActiveBanners } from "../data/qiApi";
 
-// Fetch all data
+// Fetch all data (except banners - those are fetched client-side)
 const allProducts = await getProducts();
 const categories = await getCategories();
-const banners = await getActiveBanners("homepage-hero");
 
 // Get featured products (marked as featured OR most viewed)
 const featuredProducts = await getFeaturedProducts();
@@ -28,74 +26,16 @@ const heroProduct = featuredProducts[0] ?? allProducts[0] ?? null;
   description="Catálogo de materias primas y químicos industriales con logística inmediata en Lima y todo el Perú. Integra fácilmente con tu API de WordPress."
   canonical="https://www.quimicaindustrial.pe/"
 >
-  <!-- Banner Carousel -->
-  {
-    banners && banners.length > 0 && (
-      <section class="banner-carousel">
-        <div class="banner-slides">
-          {banners.map((banner, index) => (
-            <div class="banner-slide" data-active={index === 0}>
-              {banner.link?.url ? (
-                <a
-                  href={banner.link.url}
-                  target={banner.link.openInNewTab ? "_blank" : "_self"}
-                >
-                  <img
-                    src={banner.image.url}
-                    alt={banner.image.alt || banner.title}
-                  />
-                  {banner.overlay?.title && (
-                    <div
-                      class="banner-overlay"
-                      style={`color: ${banner.overlay.textColor}; background: ${banner.overlay.backgroundColor}`}
-                    >
-                      <h2>{banner.overlay.title}</h2>
-                      {banner.overlay.subtitle && (
-                        <p>{banner.overlay.subtitle}</p>
-                      )}
-                      {banner.overlay.buttonText && (
-                        <span class="banner-btn">
-                          {banner.overlay.buttonText}
-                        </span>
-                      )}
-                    </div>
-                  )}
-                </a>
-              ) : (
-                <>
-                  <img
-                    src={banner.image.url}
-                    alt={banner.image.alt || banner.title}
-                  />
-                  {banner.overlay?.title && (
-                    <div
-                      class="banner-overlay"
-                      style={`color: ${banner.overlay.textColor}; background: ${banner.overlay.backgroundColor}`}
-                    >
-                      <h2>{banner.overlay.title}</h2>
-                      {banner.overlay.subtitle && (
-                        <p>{banner.overlay.subtitle}</p>
-                      )}
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-          ))}
-        </div>
-        {banners.length > 1 && (
-          <div class="banner-controls">
-            <button class="banner-prev" aria-label="Anterior">
-              ‹
-            </button>
-            <button class="banner-next" aria-label="Siguiente">
-              ›
-            </button>
-          </div>
-        )}
-      </section>
-    )
-  }
+  <!-- Banner Carousel (loaded client-side) -->
+  <section class="banner-carousel" id="banner-carousel" style="display: none;">
+    <div class="banner-slides" id="banner-slides">
+      <!-- Banners will be loaded here via JavaScript -->
+    </div>
+    <div class="banner-controls" id="banner-controls" style="display: none;">
+      <button class="banner-prev" aria-label="Anterior">‹</button>
+      <button class="banner-next" aria-label="Siguiente">›</button>
+    </div>
+  </section>
 
   <section class="hero" id="inicio">
     <div class="container">
@@ -1477,36 +1417,105 @@ const heroProduct = featuredProducts[0] ?? allProducts[0] ?? null;
 </style>
 
 <script>
-  // Banner Carousel
-  const bannerSlides = document.querySelectorAll(".banner-slide");
-  const prevBtn = document.querySelector(".banner-prev");
-  const nextBtn = document.querySelector(".banner-next");
-  let currentSlide = 0;
+  // Banner Carousel - Client-side loading
+  async function loadBanners() {
+    try {
+      const API_URL =
+        import.meta.env.PUBLIC_QI_API_URL ||
+        "https://oregonchem-backend.onrender.com/api/qi";
+      const response = await fetch(`${API_URL}/banners/active/homepage-hero`);
+      const data = await response.json();
 
-  function showSlide(index: number) {
-    bannerSlides.forEach((slide, i) => {
-      slide.setAttribute("data-active", i === index ? "true" : "false");
-    });
+      if (!data.success || !data.data || data.data.length === 0) {
+        return; // No banners to show
+      }
+
+      const banners = data.data;
+      const carousel = document.getElementById("banner-carousel");
+      const slidesContainer = document.getElementById("banner-slides");
+      const controlsContainer = document.getElementById("banner-controls");
+
+      if (!carousel || !slidesContainer) return;
+
+      // Build banner HTML
+      slidesContainer.innerHTML = banners
+        .map((banner: any, index: number) => {
+          const slideContent = `
+          <img src="${banner.image.url}" alt="${banner.image.alt || banner.title}" />
+          ${
+            banner.overlay?.title
+              ? `
+            <div class="banner-overlay" style="color: ${banner.overlay.textColor}; background: ${banner.overlay.backgroundColor}">
+              <h2>${banner.overlay.title}</h2>
+              ${banner.overlay.subtitle ? `<p>${banner.overlay.subtitle}</p>` : ""}
+              ${banner.overlay.buttonText ? `<span class="banner-btn">${banner.overlay.buttonText}</span>` : ""}
+            </div>
+          `
+              : ""
+          }
+        `;
+
+          return `
+          <div class="banner-slide" data-active="${index === 0}">
+            ${
+              banner.link?.url
+                ? `
+              <a href="${banner.link.url}" target="${banner.link.openInNewTab ? "_blank" : "_self"}">
+                ${slideContent}
+              </a>
+            `
+                : slideContent
+            }
+          </div>
+        `;
+        })
+        .join("");
+
+      // Show carousel
+      carousel.style.display = "block";
+
+      // Show controls if multiple banners
+      if (banners.length > 1 && controlsContainer) {
+        controlsContainer.style.display = "flex";
+      }
+
+      // Initialize carousel controls
+      const bannerSlides = document.querySelectorAll(".banner-slide");
+      const prevBtn = document.querySelector(".banner-prev");
+      const nextBtn = document.querySelector(".banner-next");
+      let currentSlide = 0;
+
+      function showSlide(index: number) {
+        bannerSlides.forEach((slide, i) => {
+          slide.setAttribute("data-active", i === index ? "true" : "false");
+        });
+      }
+
+      if (prevBtn && nextBtn && bannerSlides.length > 1) {
+        prevBtn.addEventListener("click", () => {
+          currentSlide =
+            (currentSlide - 1 + bannerSlides.length) % bannerSlides.length;
+          showSlide(currentSlide);
+        });
+
+        nextBtn.addEventListener("click", () => {
+          currentSlide = (currentSlide + 1) % bannerSlides.length;
+          showSlide(currentSlide);
+        });
+
+        // Auto-advance every 5 seconds
+        setInterval(() => {
+          currentSlide = (currentSlide + 1) % bannerSlides.length;
+          showSlide(currentSlide);
+        }, 5000);
+      }
+    } catch (error) {
+      console.error("Error loading banners:", error);
+    }
   }
 
-  if (prevBtn && nextBtn && bannerSlides.length > 1) {
-    prevBtn.addEventListener("click", () => {
-      currentSlide =
-        (currentSlide - 1 + bannerSlides.length) % bannerSlides.length;
-      showSlide(currentSlide);
-    });
-
-    nextBtn.addEventListener("click", () => {
-      currentSlide = (currentSlide + 1) % bannerSlides.length;
-      showSlide(currentSlide);
-    });
-
-    // Auto-advance every 5 seconds
-    setInterval(() => {
-      currentSlide = (currentSlide + 1) % bannerSlides.length;
-      showSlide(currentSlide);
-    }, 5000);
-  }
+  // Load banners when page loads
+  loadBanners();
 
   // Search Functionality
   const searchInput = document.getElementById(
