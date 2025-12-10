@@ -189,20 +189,16 @@ const serializedProducts = JSON.stringify(products);
   <div class="modal-overlay" data-confirm-modal hidden>
     <div class="modal-dialog">
       <div class="modal-header">
-        <h3>Confirmar eliminación</h3>
+        <h3 data-confirm-title>Confirmar</h3>
       </div>
       <div class="modal-body">
-        <p data-confirm-message>
-          ¿Está seguro que desea eliminar este producto de la cotización?
-        </p>
+        <p data-confirm-message>¿Está seguro?</p>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-outline" data-confirm-cancel>
           Cancelar
         </button>
-        <button type="button" class="btn btn-danger" data-confirm-ok>
-          Eliminar
-        </button>
+        <button type="button" class="btn" data-confirm-ok> Confirmar </button>
       </div>
     </div>
   </div>
@@ -239,15 +235,30 @@ const serializedProducts = JSON.stringify(products);
     const confirmOkBtn = document.querySelector("[data-confirm-ok]");
     const confirmCancelBtn = document.querySelector("[data-confirm-cancel]");
     const confirmMessage = document.querySelector("[data-confirm-message]");
+    const confirmTitle = document.querySelector("[data-confirm-title]");
 
     let productCounter = 0;
     let confirmResolve = null;
 
     // Custom confirm function
-    const showConfirm = (message) => {
+    const showConfirm = (
+      message,
+      title = "Confirmar",
+      okText = "Confirmar",
+      isDanger = false,
+    ) => {
       return new Promise((resolve) => {
         confirmResolve = resolve;
         if (confirmMessage) confirmMessage.textContent = message;
+        if (confirmTitle) confirmTitle.textContent = title;
+        if (confirmOkBtn) {
+          confirmOkBtn.textContent = okText;
+          if (isDanger) {
+            confirmOkBtn.classList.add("btn-danger");
+          } else {
+            confirmOkBtn.classList.remove("btn-danger");
+          }
+        }
         if (confirmModal) confirmModal.removeAttribute("hidden");
         document.body.style.overflow = "hidden";
       });
@@ -550,6 +561,9 @@ const serializedProducts = JSON.stringify(products);
         // Show custom confirmation dialog
         const confirmed = await showConfirm(
           "¿Está seguro que desea eliminar este producto de la cotización?",
+          "Confirmar eliminación",
+          "Eliminar",
+          true,
         );
         if (!confirmed) {
           return;
@@ -750,10 +764,10 @@ const serializedProducts = JSON.stringify(products);
       }
 
       // 4. Validate at least one contact preference
-      const contactPreferences = form.querySelectorAll(
+      const contactPrefsChecked = form.querySelectorAll(
         'input[name^="contact"]:checked',
       );
-      if (contactPreferences.length === 0) {
+      if (contactPrefsChecked.length === 0) {
         alert(
           "Por favor, seleccione al menos una forma de contacto preferida.",
         );
@@ -776,7 +790,12 @@ const serializedProducts = JSON.stringify(products);
       }
 
       // Show custom confirmation dialog
-      const confirmed = await showConfirm("¿Confirmar envío de cotización?");
+      const confirmed = await showConfirm(
+        "¿Está seguro que desea enviar esta cotización?",
+        "Confirmar envío",
+        "Enviar Cotización",
+        false,
+      );
       if (!confirmed) {
         return;
       }
@@ -786,8 +805,10 @@ const serializedProducts = JSON.stringify(products);
 
       // Build products array
       const products = [];
-      const productItems = productList?.querySelectorAll("[data-product-item]");
-      productItems?.forEach((item) => {
+      const productItemsForSubmit = productList?.querySelectorAll(
+        "[data-product-item]",
+      );
+      productItemsForSubmit?.forEach((item) => {
         const productId = item.querySelector("[data-product-select]")?.value;
         const presentationSelect = item.querySelector(
           'select[name*="presentationId"]',
@@ -858,7 +879,7 @@ const serializedProducts = JSON.stringify(products);
 
           // Clear cart
           if (window.qiCart) {
-            window.qiCart.clearCart();
+            window.qiCart.clear();
           }
 
           // Reset form after 3 seconds
