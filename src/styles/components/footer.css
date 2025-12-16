@@ -16,7 +16,28 @@
 @media (max-width: 768px) {
   .footer-grid {
     grid-template-columns: 1fr;
-    gap: 2rem;
+    gap: 2.5rem;
+    padding: 0 1.5rem;
+  }
+
+  .site-footer p {
+    font-size: 0.95rem;
+    line-height: 1.7;
+    max-width: 100%;
+    text-align: left;
+  }
+
+  .site-footer h3 {
+    font-size: 1.1rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .site-footer ul {
+    padding-left: 1.25rem;
+  }
+
+  .site-footer li {
+    margin-bottom: 0.75rem;
   }
 }
 
@@ -28,10 +49,31 @@
 }
 
 .site-footer .brand-logo {
-  height: 40px;
   width: auto;
   display: block;
   background: transparent;
+  object-fit: contain;
+}
+
+.site-footer .brand-logo-desktop {
+  height: 40px;
+  max-width: 200px;
+}
+
+.site-footer .brand-logo-mobile {
+  display: none;
+  max-height: 30px;
+  max-width: 150px;
+}
+
+@media (max-width: 768px) {
+  .site-footer .brand-logo-desktop {
+    display: none;
+  }
+
+  .site-footer .brand-logo-mobile {
+    display: block;
+  }
 }
 
 .site-footer h3 {
