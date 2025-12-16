@@ -46,36 +46,53 @@
   }
 }
 
+.brand {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  padding: 5px 0;
+}
+
 .brand-logo {
   height: auto;
   width: auto;
   max-height: 50px;
-  max-width: 200px;
   object-fit: contain;
-}
-
-/* Adjust logo size for mobile */
-@media (max-width: 767px) {
-  .brand-logo {
-    max-height: 40px;
-    max-width: 160px;
-  }
-}
-
-.brand-logo-mobile {
+  object-position: left center;
   display: block;
 }
 
-.brand-logo-desktop {
-  display: none;
+/* Mobile styles */
+@media (max-width: 767px) {
+  .brand-logo-desktop {
+    display: none;
+  }
+
+  .brand-logo-mobile {
+    display: block;
+    max-height: 40px;
+    max-width: 180px;
+  }
+
+  .brand {
+    padding: 8px 0;
+  }
+}
+
+/* Desktop styles */
+@media (min-width: 768px) {
+  .brand-logo-desktop {
+    display: block;
+    max-height: 50px;
+  }
+
+  .brand-logo-mobile {
+    display: none;
+  }
 }
 
 /* Desktop: Larger logo */
 @media (min-width: 768px) {
-  .brand-logo-mobile {
-    display: none;
-  }
-
   .brand-logo-desktop {
     display: block;
     height: 45px;
