@@ -47,8 +47,19 @@
 }
 
 .brand-logo {
-  height: 40px;
+  height: auto;
   width: auto;
+  max-height: 50px;
+  max-width: 200px;
+  object-fit: contain;
+}
+
+/* Adjust logo size for mobile */
+@media (max-width: 767px) {
+  .brand-logo {
+    max-height: 40px;
+    max-width: 160px;
+  }
 }
 
 .brand-logo-mobile {

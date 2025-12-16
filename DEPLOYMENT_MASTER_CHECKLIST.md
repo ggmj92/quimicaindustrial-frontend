@@ -8,9 +8,9 @@
 
 ### Frontend Code
 
-- [ ] Frontend `.env` updated to production backend URL
-- [ ] All changes committed to Git
-- [ ] Code pushed to GitHub
+- [✅] Frontend `.env` updated to production backend URL
+- [✅] All changes committed to Git
+- [✅] Code pushed to GitHub
   ```bash
   cd /Users/ggmj/Development/quimicaindustrial-frontend
   git add .
@@ -20,34 +20,34 @@
 
 ### Accounts Ready
 
-- [ ] Vercel account logged in
-- [ ] Render account logged in
-- [ ] MailerLite account logged in
-- [ ] punto.pe account logged in
+- [✅] Vercel account logged in
+- [✅] Render account logged in
+- [✅] MailerLite account logged in
+- [v] punto.pe account logged in
 
 ---
 
 ## **PHASE 2: VERCEL DEPLOYMENT** (5 minutes)
 
-- [ ] Go to https://vercel.com/dashboard
-- [ ] Click "Add New Project"
-- [ ] Import `quimicaindustrial-frontend` from GitHub
-- [ ] Framework detected as "Astro" ✅
-- [ ] Add environment variable:
+- [✅] Go to https://vercel.com/dashboard
+- [✅] Click "Add New Project"
+- [✅] Import `quimicaindustrial-frontend` from GitHub
+- [✅] Framework detected as "Astro" ✅
+- [✅] Add environment variable:
   - Name: `PUBLIC_QI_API_URL`
   - Value: `https://oregonchem-backend.onrender.com/api/qi`
-- [ ] Click "Deploy"
-- [ ] Wait for deployment to complete (~2-3 minutes)
-- [ ] Deployment successful ✅
-- [ ] Note temporary URL: `_______________________________`
+- [✅] Click "Deploy"
+- [✅] Wait for deployment to complete (~2-3 minutes)
+- [✅] Deployment successful ✅
+- [✅] Note temporary URL: `https://quimicaindustrial-frontend.vercel.app/`
 
 ### Get Vercel DNS Records
 
-- [ ] Go to Settings → Domains
-- [ ] Click "Add Domain"
-- [ ] Enter: `www.quimicaindustrial.pe`
+- [✅] Go to Settings → Domains
+- [✅] Click "Add Domain"
+- [✅] Enter: `www.quimicaindustrial.pe`
 - [ ] Vercel shows DNS records
-- [ ] **COPY A record IP address:** `_______________________________`
+- [ ] **COPY A record IP address:** `Type: A | Name: @ | Value: 216.198.79.1`
 - [ ] **COPY CNAME value:** (should be `cname.vercel-dns.com`)
 
 ---
