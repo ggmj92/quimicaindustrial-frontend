@@ -157,6 +157,63 @@ const presentationOptions = Array.from(
       <div class="catalog-main">
         <div class="catalog-toolbar">
           <div class="toolbar-controls">
+            <div class="view-toggle-group">
+              <span
+                style="font-weight: 600; font-size: 0.875rem; color: #0f172a;"
+                >Vista</span
+              >
+              <div>
+                <button
+                  type="button"
+                  data-view-toggle
+                  data-view="grid"
+                  aria-label="Vista de cuadrícula"
+                  aria-pressed="true"
+                  class="is-active"
+                >
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <rect x="3" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="14" width="7" height="7"></rect>
+                    <rect x="3" y="14" width="7" height="7"></rect>
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  data-view-toggle
+                  data-view="list"
+                  aria-label="Vista de lista"
+                  aria-pressed="false"
+                >
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <line x1="8" y1="6" x2="21" y2="6"></line>
+                    <line x1="8" y1="12" x2="21" y2="12"></line>
+                    <line x1="8" y1="18" x2="21" y2="18"></line>
+                    <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                    <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                    <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                  </svg>
+                </button>
+              </div>
+            </div>
             <label>
               Ordenar por
               <select data-filter-sort>
@@ -314,33 +371,32 @@ const presentationOptions = Array.from(
 
 <script>
   document.addEventListener("DOMContentLoaded", () => {
-    const grid = document.querySelector("[data-product-grid]");
+    const grid = document.querySelector<HTMLElement>("[data-product-grid]");
     if (!grid) return;
 
-    const normalizeText = (value) =>
-      (value || "")
-        .toString()
+    const normalizeText = (value: unknown): string =>
+      String(value ?? "")
         .toLowerCase()
         .normalize("NFD")
         .replace(/[\u0300-\u036f]/g, "");
 
-    const cards = Array.from(grid.querySelectorAll("[data-product-card]")).map(
-      (element) => ({
-        element,
-        rawName: element.getAttribute("data-sort-name") || "",
-        searchIndex: normalizeText(
-          element.getAttribute("data-search-index") || "",
-        ),
-        categories: (element.getAttribute("data-categories") || "")
-          .split(",")
-          .filter(Boolean),
-        presentations: (element.getAttribute("data-presentations") || "")
-          .split(",")
-          .filter(Boolean),
-        popularity: Number(element.getAttribute("data-popularity") || "0"),
-        date: element.getAttribute("data-date") || "",
-      }),
-    );
+    const cards = Array.from(
+      grid.querySelectorAll<HTMLElement>("[data-product-card]"),
+    ).map((element) => ({
+      element,
+      rawName: element.getAttribute("data-sort-name") || "",
+      searchIndex: normalizeText(
+        element.getAttribute("data-search-index") || "",
+      ),
+      categories: (element.getAttribute("data-categories") || "")
+        .split(",")
+        .filter(Boolean),
+      presentations: (element.getAttribute("data-presentations") || "")
+        .split(",")
+        .filter(Boolean),
+      popularity: Number(element.getAttribute("data-popularity") || "0"),
+      date: element.getAttribute("data-date") || "",
+    }));
 
     const perPageSelect = document.querySelector("[data-filter-per-page]");
     const initialPerPage =
@@ -384,7 +440,7 @@ const presentationOptions = Array.from(
       });
     };
 
-    const sortCards = (data) => {
+    const sortCards = (data: typeof cards) => {
       const sorted = [...data];
       switch (state.sort) {
         case "alpha":
@@ -667,7 +723,52 @@ const presentationOptions = Array.from(
       }
     };
 
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
+    // View toggle functionality
+    const productGrid = document.querySelector("[data-product-grid]");
+
+    const applyView = (view: "grid" | "list") => {
+      if (!productGrid) return;
+
+      productGrid.classList.toggle("is-list", view === "list");
+
+      const buttons = Array.from(
+        document.querySelectorAll<HTMLButtonElement>("[data-view-toggle]"),
+      );
+      buttons.forEach((btn) => {
+        const isActive = btn.dataset.view === view;
+        btn.classList.toggle("is-active", isActive);
+        btn.setAttribute("aria-pressed", String(isActive));
+      });
+
+      try {
+        window.localStorage.setItem("catalogView", view);
+      } catch {
+        // ignore
+      }
+    };
+
+    const savedView = (() => {
+      try {
+        return window.localStorage.getItem("catalogView");
+      } catch {
+        return null;
+      }
+    })();
+
+    if (savedView === "list" || savedView === "grid") {
+      applyView(savedView);
+    }
+
+    document.addEventListener("click", (event) => {
+      const target =
+        event.target instanceof Element
+          ? event.target.closest<HTMLButtonElement>("[data-view-toggle]")
+          : null;
+      if (!target) return;
+      const view = target.dataset.view;
+      if (view === "grid" || view === "list") {
+        applyView(view);
+      }
+    });
   });
 </script>
