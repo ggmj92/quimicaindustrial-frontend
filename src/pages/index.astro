@@ -1730,7 +1730,11 @@ const heroProduct = featuredProducts[0] ?? allProducts[0] ?? null;
         formStatus.textContent = "Enviando...";
         formStatus.className = "form-status";
 
-        const response = await fetch("/api/contact", {
+        const API_URL =
+          import.meta.env.PUBLIC_QI_API_URL?.replace("/api/qi", "") ||
+          "https://oregonchem-backend.onrender.com";
+
+        const response = await fetch(`${API_URL}/api/qi/contact`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -1738,12 +1742,14 @@ const heroProduct = featuredProducts[0] ?? allProducts[0] ?? null;
           body: JSON.stringify(data),
         });
 
-        if (response.ok) {
+        const result = await response.json().catch(() => null);
+
+        if (response.ok && (result?.success ?? true)) {
           formStatus.textContent = "¡Mensaje enviado! Te responderemos pronto.";
           formStatus.className = "form-status success";
           contactForm.reset();
         } else {
-          throw new Error("Error al enviar");
+          throw new Error(result?.error || "Error al enviar");
         }
       } catch (error) {
         formStatus.textContent =

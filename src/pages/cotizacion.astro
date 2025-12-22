@@ -145,9 +145,9 @@ const serializedProducts = JSON.stringify(products);
           <label>
             Observaciones / Comentarios
             <textarea
-              name="comments"
+              name="observations"
               rows="4"
-              placeholder="Indique cualquier detalle adicional sobre su solicitud"
+              placeholder="Indique detalles adicionales sobre su solicitud"
             ></textarea>
           </label>
         </div>
@@ -834,9 +834,9 @@ const serializedProducts = JSON.stringify(products);
 
       // Build contact preferences
       const contactPreferences = {
-        email: formData.get("contactEmail") === "on",
-        whatsapp: formData.get("contactWhatsapp") === "on",
-        phone: formData.get("contactPhone") === "on",
+        email: formData.get("contactEmail") !== null,
+        whatsapp: formData.get("contactWhatsapp") !== null,
+        phone: formData.get("contactPhone") !== null,
       };
 
       // Build quote data

@@ -18,25 +18,22 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
-    // TODO: Send email using a service like SendGrid, Resend, or Nodemailer
-    // For now, we'll just return success
+    const API_URL =
+      import.meta.env.PUBLIC_QI_API_URL?.replace("/api/qi", "") ||
+      "https://oregonchem-backend.onrender.com";
 
-    // In production, you would send an email here:
-    // await sendEmail({
-    //   to: 'ventas@quimicaindustrial.pe',
-    //   subject: `Nuevo mensaje de contacto de ${name}`,
-    //   html: `
-    //     <h2>Nuevo mensaje de contacto</h2>
-    //     <p><strong>Nombre:</strong> ${name}</p>
-    //     <p><strong>Email:</strong> ${email}</p>
-    //     <p><strong>Teléfono:</strong> ${phone || 'No proporcionado'}</p>
-    //     <p><strong>Mensaje:</strong></p>
-    //     <p>${message}</p>
-    //   `,
-    // });
+    const response = await fetch(`${API_URL}/api/qi/contact`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ name, email, phone, message }),
+    });
 
-    return new Response(JSON.stringify({ success: true }), {
-      status: 200,
+    const result = await response.json().catch(() => null);
+
+    return new Response(JSON.stringify(result ?? { success: response.ok }), {
+      status: response.status,
       headers: {
         "Content-Type": "application/json",
       },
