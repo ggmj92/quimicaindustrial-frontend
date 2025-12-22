@@ -134,13 +134,9 @@ export async function getProducts(): Promise<Product[]> {
     // Get ALL products (no status filter for now - most are in draft)
     let qiProducts = await qiApi.getProducts({ limit: 1000 });
 
-    console.log(`🔍 Fetched ${qiProducts.length} products from QI API`);
-
     cachedProducts = qiProducts.map((p) =>
       adaptQIProduct(p, qiCategories || [], presentations || []),
     );
-
-    console.log(`✅ Adapted ${cachedProducts.length} products for frontend`);
 
     return cachedProducts;
   } catch (error) {

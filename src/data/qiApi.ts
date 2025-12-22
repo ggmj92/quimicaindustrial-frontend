@@ -5,10 +5,6 @@ const API_BASE =
   import.meta.env.PUBLIC_QI_API_URL ||
   "https://oregonchem-backend.onrender.com/api/qi";
 
-// Debug: Log which API we're using
-console.log("🔍 QI API Base URL:", API_BASE);
-console.log("🔍 Environment:", import.meta.env.PUBLIC_QI_API_URL);
-
 export interface QIImage {
   url: string;
   alt: string;
@@ -135,8 +131,6 @@ async function fetchAPI<T>(
         if (value) url.searchParams.set(key, value);
       });
     }
-
-    console.log("🌐 Fetching from QI MongoDB API:", url.toString());
     const response = await fetch(url.toString());
 
     if (!response.ok) {
@@ -147,10 +141,6 @@ async function fetchAPI<T>(
     }
 
     const result: APIResponse<T> = await response.json();
-    console.log(
-      `✅ QI API response for ${endpoint}:`,
-      result.success ? "SUCCESS" : "FAILED",
-    );
     return result.success ? result.data : null;
   } catch (error) {
     console.warn(`QI API request failed for ${endpoint}`, error);

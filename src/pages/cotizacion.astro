@@ -854,8 +854,6 @@ const serializedProducts = JSON.stringify(products);
         observations: formData.get("observations") || "",
       };
 
-      console.log("Quote data:", quoteData);
-
       // Send to backend API
       const API_URL =
         import.meta.env.PUBLIC_QI_API_URL?.replace("/api/qi", "") ||

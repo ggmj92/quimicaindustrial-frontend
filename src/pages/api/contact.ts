@@ -19,14 +19,7 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     // TODO: Send email using a service like SendGrid, Resend, or Nodemailer
-    // For now, we'll just log it and return success
-    console.log("Contact form submission:", {
-      name,
-      email,
-      phone,
-      message,
-      timestamp: new Date().toISOString(),
-    });
+    // For now, we'll just return success
 
     // In production, you would send an email here:
     // await sendEmail({

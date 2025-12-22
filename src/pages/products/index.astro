@@ -541,6 +541,8 @@ const presentationOptions = Array.from(
     const urlParams = new URLSearchParams(window.location.search);
     const categoryParam = urlParams.get("category");
 
+    const searchParam = urlParams.get("search") || urlParams.get("q");
+
     if (categoryParam) {
       // Add category to state before first render
       state.categories.add(categoryParam);
@@ -550,6 +552,15 @@ const presentationOptions = Array.from(
       );
       if (categoryCheckbox instanceof HTMLInputElement) {
         categoryCheckbox.checked = true;
+      }
+    }
+
+    if (typeof searchParam === "string" && searchParam.trim()) {
+      state.search = searchParam;
+      state.searchNormalized = normalizeText(searchParam);
+      state.currentPage = 1;
+      if (searchInput instanceof HTMLInputElement) {
+        searchInput.value = searchParam;
       }
     }
 
