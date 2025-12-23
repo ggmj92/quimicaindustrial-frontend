@@ -7,23 +7,16 @@ import { getProducts, getCategories } from "../../data/products";
 import type { Product } from "../../data/products";
 import { generateBreadcrumbSchema } from "../../utils/seo";
 
-const allProducts = await getProducts();
+const products = await getProducts();
 const categories = await getCategories();
 
 const url = Astro.url;
 const currentPage = Math.max(1, Number(url.searchParams.get("page")) || 1);
-const perPage = 18;
-const totalProducts = allProducts.length;
-const totalPages = Math.ceil(totalProducts / perPage);
-
-const validPage = Math.min(currentPage, totalPages);
-const startIndex = (validPage - 1) * perPage;
-const endIndex = startIndex + perPage;
-const products = allProducts.slice(startIndex, endIndex);
+const totalProducts = products.length;
 
 const presentationOptions = Array.from(
   new Set(
-    allProducts.flatMap((product) =>
+    products.flatMap((product) =>
       product.presentations.map((presentation) => presentation.label),
     ),
   ),
@@ -51,25 +44,11 @@ const presentationOptions = Array.from(
 });
 
 const baseUrl = "https://www.quimicaindustrial.pe/products";
-const canonicalUrl = validPage === 1 ? baseUrl : `${baseUrl}?page=${validPage}`;
-const prevUrl =
-  validPage > 1
-    ? validPage === 2
-      ? baseUrl
-      : `${baseUrl}?page=${validPage - 1}`
-    : null;
-const nextUrl =
-  validPage < totalPages ? `${baseUrl}?page=${validPage + 1}` : null;
+const canonicalUrl = baseUrl;
 
-const pageTitle =
-  validPage === 1
-    ? "Catálogo de productos químicos | Química Industrial"
-    : `Catálogo de productos químicos - Página ${validPage} | Química Industrial`;
-
+const pageTitle = "Catálogo de productos químicos | Química Industrial";
 const pageDescription =
-  validPage === 1
-    ? "Explora químicos industriales, solventes, ácidos y materias primas disponibles en Lima, Perú. Filtra por categoría, presentación o popularidad."
-    : `Explora químicos industriales, solventes, ácidos y materias primas - Página ${validPage} de ${totalPages}. Disponibles en Lima, Perú.`;
+  "Explora químicos industriales, solventes, ácidos y materias primas disponibles en Lima, Perú. Filtra por categoría, presentación o popularidad.";
 
 const breadcrumbSchema = generateBreadcrumbSchema([
   { name: "Inicio", url: "https://www.quimicaindustrial.pe" },
@@ -83,8 +62,6 @@ const breadcrumbSchema = generateBreadcrumbSchema([
   canonical={canonicalUrl}
 >
   <Fragment slot="head">
-    {prevUrl && <link rel="prev" href={prevUrl} />}
-    {nextUrl && <link rel="next" href={nextUrl} />}
     <meta
       name="keywords"
       content="catálogo químicos industriales, materias primas Lima, solventes industriales, ácidos químicos, reactivos químicos Perú, productos químicos mayorista"
@@ -309,9 +286,7 @@ const breadcrumbSchema = generateBreadcrumbSchema([
         </div>
 
         <p class="catalog-result" data-result-count>
-          Mostrando {startIndex + 1}-{Math.min(endIndex, totalProducts)} de {
-            totalProducts
-          } productos
+          Mostrando {totalProducts} productos
         </p>
 
         <div class="product-grid" data-product-grid>
