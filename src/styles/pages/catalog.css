@@ -361,8 +361,8 @@ legend {
   min-height: 112px;
   max-height: 112px;
   align-self: start;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 1px 6px rgba(15, 23, 42, 0.06);
+  border: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   transform: none;
   align-items: center;
 }
@@ -613,14 +613,14 @@ legend {
 
 .catalog .product-grid.is-list .product-actions {
   border-top: none;
-  border-left: 1px solid #e2e8f0;
+  border-left: none;
   padding: 0.875rem 0.875rem;
   grid-template-columns: 1fr;
   align-content: center;
   min-width: 124px;
   max-width: 124px;
   gap: 0.625rem;
-  background: #fbfdff;
+  background: transparent;
 }
 
 .catalog .product-grid.is-list .product-actions .btn {
