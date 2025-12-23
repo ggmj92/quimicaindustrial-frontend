@@ -7,6 +7,12 @@ import {
   getRelatedProducts,
 } from "../../data/products";
 import type { Product } from "../../data/products";
+import {
+  generateProductSchema,
+  generateBreadcrumbSchema,
+  generateMetaDescription,
+  truncateDescription,
+} from "../../utils/seo";
 import "../../styles/pages/product-detail.css";
 
 export async function getStaticPaths() {
@@ -38,14 +44,66 @@ const relatedProducts = (await getRelatedProducts(product.slug)).filter(
   (item) => item.slug !== product.slug,
 );
 
-// No price or stock functions needed
+// SEO data
+const categoryName = productCategories[0]?.name;
+const productSchema = generateProductSchema(product, categoryName);
+const breadcrumbSchema = generateBreadcrumbSchema([
+  { name: "Inicio", url: "https://www.quimicaindustrial.pe" },
+  { name: "Productos", url: "https://www.quimicaindustrial.pe/products" },
+  { name: product.name },
+]);
+
+const metaDescription = truncateDescription(
+  generateMetaDescription(product, categoryName),
+  160,
+);
+
+const ogImage =
+  product.image || "https://www.quimicaindustrial.pe/images/qi-logo.png";
+const productUrl = `https://www.quimicaindustrial.pe/products/${product.slug}`;
 ---
 
 <Layout
   title={`${product.name} | Química Industrial`}
-  description={product.summary}
-  canonical={`https://www.quimicaindustrial.pe/products/${product.slug}`}
+  description={metaDescription}
+  canonical={productUrl}
 >
+  <Fragment slot="head">
+    <meta property="og:type" content="product" />
+    <meta
+      property="og:title"
+      content={`${product.name} | Química Industrial`}
+    />
+    <meta property="og:description" content={metaDescription} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:url" content={productUrl} />
+    <meta property="product:brand" content="Química Industrial" />
+    <meta property="product:availability" content="in stock" />
+    <meta property="product:condition" content="new" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:title"
+      content={`${product.name} | Química Industrial`}
+    />
+    <meta name="twitter:description" content={metaDescription} />
+    <meta name="twitter:image" content={ogImage} />
+    {
+      categoryName && (
+        <meta
+          name="keywords"
+          content={`${product.name}, ${categoryName}, químicos industriales, materias primas, Lima, Perú`}
+        />
+      )
+    }
+    <script
+      type="application/ld+json"
+      set:html={JSON.stringify(productSchema)}
+    />
+    <script
+      type="application/ld+json"
+      set:html={JSON.stringify(breadcrumbSchema)}
+    />
+  </Fragment>
   <ProductDetail
     product={product}
     categories={productCategories}

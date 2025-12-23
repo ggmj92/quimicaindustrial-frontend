@@ -7,6 +7,11 @@ import {
   getProducts,
 } from "../data/products";
 import type { Product } from "../data/products";
+import {
+  generateOrganizationSchema,
+  generateLocalBusinessSchema,
+  generateFAQSchema,
+} from "../utils/seo";
 
 // Fetch all data (except banners - those are fetched client-side)
 const allProducts = await getProducts();
@@ -18,7 +23,10 @@ const featuredProducts = await getFeaturedProducts();
 // Use first featured product or first product for hero
 const heroProduct = featuredProducts[0] ?? allProducts[0] ?? null;
 
-// No stock labels needed - this is a quote request site, not e-commerce
+// SEO structured data
+const organizationSchema = generateOrganizationSchema();
+const localBusinessSchema = generateLocalBusinessSchema();
+const faqSchema = generateFAQSchema();
 ---
 
 <Layout
@@ -26,6 +34,27 @@ const heroProduct = featuredProducts[0] ?? allProducts[0] ?? null;
   description="Catálogo de materias primas y químicos industriales con logística inmediata en Lima y todo el Perú. Integra fácilmente con tu API de WordPress."
   canonical="https://www.quimicaindustrial.pe/"
 >
+  <Fragment slot="head">
+    <meta
+      name="keywords"
+      content="químicos industriales, materias primas, distribuidores químicos Lima, químicos Perú, solventes industriales, ácidos, reactivos químicos"
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="es_PE" />
+    <meta name="geo.region" content="PE-LIM" />
+    <meta name="geo.placename" content="Lima" />
+    <meta name="geo.position" content="-12.11667;-76.99893" />
+    <meta name="ICBM" content="-12.11667, -76.99893" />
+    <script
+      type="application/ld+json"
+      set:html={JSON.stringify(organizationSchema)}
+    />
+    <script
+      type="application/ld+json"
+      set:html={JSON.stringify(localBusinessSchema)}
+    />
+    <script type="application/ld+json" set:html={JSON.stringify(faqSchema)} />
+  </Fragment>
   <!-- Banner Carousel (loaded client-side) -->
   <section class="banner-carousel" id="banner-carousel" style="display: none;">
     <div class="banner-slides" id="banner-slides">

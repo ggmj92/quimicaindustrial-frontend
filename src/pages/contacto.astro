@@ -1,6 +1,21 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import "../styles/pages/contact.css";
+import { generateBreadcrumbSchema } from "../utils/seo";
+
+const breadcrumbSchema = generateBreadcrumbSchema([
+  { name: "Inicio", url: "https://www.quimicaindustrial.pe" },
+  { name: "Contacto" },
+]);
+
+const contactPageSchema = {
+  "@context": "https://schema.org",
+  "@type": "ContactPage",
+  name: "Contacto | Química Industrial",
+  description:
+    "Comunícate con Química Industrial para coordinar entregas de químicos, soporte técnico y cotizaciones en Lima, Perú.",
+  url: "https://www.quimicaindustrial.pe/contacto",
+};
 ---
 
 <Layout
@@ -8,6 +23,20 @@ import "../styles/pages/contact.css";
   description="Comunícate con Química Industrial para coordinar entregas de químicos, soporte técnico y cotizaciones en Lima, Perú."
   canonical="https://www.quimicaindustrial.pe/contacto"
 >
+  <Fragment slot="head">
+    <meta
+      name="keywords"
+      content="contacto química industrial, cotizaciones químicos Lima, soporte técnico químicos, distribuidor químicos Perú"
+    />
+    <script
+      type="application/ld+json"
+      set:html={JSON.stringify(contactPageSchema)}
+    />
+    <script
+      type="application/ld+json"
+      set:html={JSON.stringify(breadcrumbSchema)}
+    />
+  </Fragment>
   <section class="contact-page">
     <div class="container">
       <div class="contact-header">
