@@ -314,7 +314,7 @@ legend {
   color: var(--color-muted);
 }
 
-.product-grid {
+.catalog .product-grid {
   display: grid;
   gap: 1.5rem;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -322,7 +322,7 @@ legend {
   grid-auto-rows: 1fr;
 }
 
-.product-grid.is-list {
+.catalog .product-grid.is-list {
   grid-template-columns: 1fr;
   gap: 1rem;
   align-items: start;
@@ -330,12 +330,12 @@ legend {
 }
 
 @media (max-width: 640px) {
-  .product-grid {
+  .catalog .product-grid {
     grid-template-columns: 1fr;
   }
 }
 
-.product-card {
+.catalog .product-card {
   background: white;
   border-radius: 12px;
   overflow: hidden;
@@ -347,14 +347,15 @@ legend {
   transition:
     transform 0.2s,
     box-shadow 0.2s;
+  padding: 0;
 }
 
-.product-card:hover {
+.catalog .product-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
 }
 
-.product-grid.is-list .product-card {
+.catalog .product-grid.is-list .product-card {
   flex-direction: row;
   height: 112px;
   min-height: 112px;
@@ -366,12 +367,12 @@ legend {
   align-items: center;
 }
 
-.product-grid.is-list .product-card:hover {
+.catalog .product-grid.is-list .product-card:hover {
   transform: translateX(3px);
   box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
 }
 
-.product-image {
+.catalog .product-image {
   width: 100%;
   height: 200px;
   overflow: hidden;
@@ -379,13 +380,13 @@ legend {
   flex-shrink: 0;
 }
 
-.product-image img {
+.catalog .product-image img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.product-grid.is-list .product-image {
+.catalog .product-grid.is-list .product-image {
   width: 84px;
   height: 84px;
   min-height: 84px;
@@ -401,7 +402,7 @@ legend {
   justify-content: center;
 }
 
-.product-grid.is-list .product-image img {
+.catalog .product-grid.is-list .product-image img {
   object-fit: contain;
   padding: 6px;
 }
@@ -415,7 +416,7 @@ legend {
   justify-content: center;
 }
 
-.product-body {
+.catalog .product-body {
   padding: 1.25rem;
   flex: 1;
   display: flex;
@@ -423,7 +424,7 @@ legend {
   gap: 0.75rem;
 }
 
-.product-grid.is-list .product-body {
+.catalog .product-grid.is-list .product-body {
   padding: 0 12px;
   overflow: hidden;
   flex: 1;
@@ -436,7 +437,7 @@ legend {
   align-content: center;
 }
 
-.product-body h3 {
+.catalog .product-body h3 {
   font-size: 1.0625rem;
   margin: 0;
   color: #0f172a;
@@ -449,7 +450,7 @@ legend {
   overflow: hidden;
 }
 
-.product-grid.is-list .product-body h3 {
+.catalog .product-grid.is-list .product-body h3 {
   font-size: 0.86rem;
   font-weight: 600;
   min-height: auto;
@@ -466,7 +467,7 @@ legend {
   grid-row: 1;
 }
 
-.product-summary {
+.catalog .product-summary {
   margin: 0;
   font-size: 0.875rem;
   color: #64748b;
@@ -479,11 +480,11 @@ legend {
   flex-shrink: 0;
 }
 
-.product-grid.is-list .product-summary {
+.catalog .product-grid.is-list .product-summary {
   display: none;
 }
 
-.product-presentations-list {
+.catalog .product-presentations-list {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
@@ -492,7 +493,7 @@ legend {
   align-content: flex-start;
 }
 
-.product-grid.is-list .product-presentations-list {
+.catalog .product-grid.is-list .product-presentations-list {
   margin-top: 0.25rem;
   min-height: auto;
   display: grid;
@@ -507,7 +508,7 @@ legend {
   align-self: start;
 }
 
-.product-grid.is-list .presentation-badge {
+.catalog .product-grid.is-list .presentation-badge {
   font-size: 0.6875rem;
   padding: 0.15rem 0.45rem;
   line-height: 1.2;
@@ -516,18 +517,18 @@ legend {
 }
 
 @media (max-width: 720px) {
-  .product-grid.is-list {
+  .catalog .product-grid.is-list {
     gap: 0.75rem;
   }
 
-  .product-grid.is-list .product-card {
+  .catalog .product-grid.is-list .product-card {
     height: 92px;
     min-height: 92px;
     max-height: 92px;
     align-items: center;
   }
 
-  .product-grid.is-list .product-image {
+  .catalog .product-grid.is-list .product-image {
     width: 64px;
     height: 64px;
     min-height: 64px;
@@ -536,26 +537,26 @@ legend {
     border-radius: 10px;
   }
 
-  .product-grid.is-list .product-image img {
+  .catalog .product-grid.is-list .product-image img {
     padding: 4px;
   }
 
-  .product-grid.is-list .product-body {
+  .catalog .product-grid.is-list .product-body {
     grid-template-columns: 1fr;
     grid-template-rows: auto auto auto;
     padding: 0 10px;
     row-gap: 4px;
   }
 
-  .product-grid.is-list .product-body h3 {
+  .catalog .product-grid.is-list .product-body h3 {
     font-size: 0.9rem;
   }
 
-  .product-grid.is-list .product-summary {
+  .catalog .product-grid.is-list .product-summary {
     display: none;
   }
 
-  .product-grid.is-list .product-presentations-list {
+  .catalog .product-grid.is-list .product-presentations-list {
     grid-column: 1;
     grid-row: 2;
     margin-top: 0;
@@ -568,29 +569,31 @@ legend {
     scrollbar-width: none;
   }
 
-  .product-grid.is-list .product-presentations-list::-webkit-scrollbar {
+  .catalog
+    .product-grid.is-list
+    .product-presentations-list::-webkit-scrollbar {
     display: none;
   }
 
-  .product-grid.is-list .presentation-badge {
+  .catalog .product-grid.is-list .presentation-badge {
     font-size: 0.66rem;
     padding: 0.14rem 0.42rem;
   }
 
-  .product-grid.is-list .product-actions {
+  .catalog .product-grid.is-list .product-actions {
     padding: 10px 10px;
     min-width: 108px;
     max-width: 108px;
     gap: 8px;
   }
 
-  .product-grid.is-list .product-actions .btn {
+  .catalog .product-grid.is-list .product-actions .btn {
     font-size: 0.78rem;
     padding: 0.4rem 0.55rem;
   }
 }
 
-.presentation-badge {
+.catalog .presentation-badge {
   padding: 0.25rem 0.625rem;
   border-radius: 6px;
   background: #eff6ff;
@@ -630,7 +633,7 @@ legend {
   margin: 0;
 }
 
-.filter-empty {
+.catalog .filter-empty {
   margin: 0;
   color: var(--color-muted);
   font-size: 0.85rem;
@@ -772,32 +775,32 @@ legend {
     margin-bottom: 0;
   }
 
-  .product-grid {
+  .catalog .product-grid {
     gap: 1.25rem;
   }
 
-  .product-card {
+  .catalog .product-card {
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
   }
 
-  .product-image {
+  .catalog .product-image {
     height: 180px;
   }
 
-  .product-body {
+  .catalog .product-body {
     padding: 1rem;
     gap: 0.625rem;
   }
 
-  .product-body h3 {
+  .catalog .product-body h3 {
     font-size: 1rem;
   }
 
-  .product-summary {
+  .catalog .product-summary {
     font-size: 0.8125rem;
   }
 
-  .presentation-badge {
+  .catalog .presentation-badge {
     font-size: 0.75rem;
     padding: 0.2rem 0.5rem;
   }
@@ -853,11 +856,11 @@ legend {
     width: 100%;
   }
 
-  .product-image {
+  .catalog .product-image {
     height: 160px;
   }
 
-  .product-body h3 {
+  .catalog .product-body h3 {
     font-size: 0.9375rem;
   }
 
