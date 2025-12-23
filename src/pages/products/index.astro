@@ -1,20 +1,32 @@
 ---
+export const prerender = true;
+
 import Layout from "../../layouts/Layout.astro";
 import "../../styles/pages/catalog.css";
 import { getProducts, getCategories } from "../../data/products";
 import type { Product } from "../../data/products";
 
-const products = await getProducts();
+const allProducts = await getProducts();
 const categories = await getCategories();
-// Get unique presentations and sort: solids first (a-z), then liquids (a-z)
+
+const url = Astro.url;
+const currentPage = Math.max(1, Number(url.searchParams.get("page")) || 1);
+const perPage = 18;
+const totalProducts = allProducts.length;
+const totalPages = Math.ceil(totalProducts / perPage);
+
+const validPage = Math.min(currentPage, totalPages);
+const startIndex = (validPage - 1) * perPage;
+const endIndex = startIndex + perPage;
+const products = allProducts.slice(startIndex, endIndex);
+
 const presentationOptions = Array.from(
   new Set(
-    products.flatMap((product) =>
+    allProducts.flatMap((product) =>
       product.presentations.map((presentation) => presentation.label),
     ),
   ),
 ).sort((a, b) => {
-  // Determine if presentation is liquid or solid based on unit
   const liquidUnits = [
     "l",
     "lt",
@@ -31,20 +43,58 @@ const presentationOptions = Array.from(
   const aIsLiquid = liquidUnits.some((unit) => aLower.includes(unit));
   const bIsLiquid = liquidUnits.some((unit) => bLower.includes(unit));
 
-  // If one is liquid and other is solid, solid comes first
   if (aIsLiquid && !bIsLiquid) return 1;
   if (!aIsLiquid && bIsLiquid) return -1;
 
-  // Both same type, sort alphabetically/numerically
   return a.localeCompare(b, "es-PE", { sensitivity: "base", numeric: true });
 });
+
+const baseUrl = "https://www.quimicaindustrial.pe/products";
+const canonicalUrl = validPage === 1 ? baseUrl : `${baseUrl}?page=${validPage}`;
+const prevUrl =
+  validPage > 1
+    ? validPage === 2
+      ? baseUrl
+      : `${baseUrl}?page=${validPage - 1}`
+    : null;
+const nextUrl =
+  validPage < totalPages ? `${baseUrl}?page=${validPage + 1}` : null;
+
+const pageTitle =
+  validPage === 1
+    ? "Catálogo de productos químicos | Química Industrial"
+    : `Catálogo de productos químicos - Página ${validPage} | Química Industrial`;
+
+const pageDescription =
+  validPage === 1
+    ? "Explora químicos industriales, solventes, ácidos y materias primas disponibles en Lima, Perú. Filtra por categoría, presentación o popularidad."
+    : `Explora químicos industriales, solventes, ácidos y materias primas - Página ${validPage} de ${totalPages}. Disponibles en Lima, Perú.`;
 ---
 
 <Layout
-  title="Catálogo de productos químicos | Química Industrial"
-  description="Explora químicos industriales, solventes, ácidos y materias primas disponibles en Lima, Perú. Filtra por categoría, presentación o popularidad."
-  canonical="https://www.quimicaindustrial.pe/products"
+  title={pageTitle}
+  description={pageDescription}
+  canonical={canonicalUrl}
 >
+  <Fragment slot="head">
+    {prevUrl && <link rel="prev" href={prevUrl} />}
+    {nextUrl && <link rel="next" href={nextUrl} />}
+    <script
+      type="application/ld+json"
+      set:html={JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "CollectionPage",
+        name: pageTitle,
+        description: pageDescription,
+        url: canonicalUrl,
+        isPartOf: {
+          "@type": "WebSite",
+          name: "Química Industrial",
+          url: "https://www.quimicaindustrial.pe",
+        },
+      })}
+    />
+  </Fragment>
   <section class="catalog">
     <header class="catalog-header">
       <div>
@@ -245,7 +295,9 @@ const presentationOptions = Array.from(
         </div>
 
         <p class="catalog-result" data-result-count>
-          Mostrando {products.length} productos
+          Mostrando {startIndex + 1}-{Math.min(endIndex, totalProducts)} de {
+            totalProducts
+          } productos
         </p>
 
         <div class="product-grid" data-product-grid>
@@ -689,13 +741,28 @@ const presentationOptions = Array.from(
         event.target instanceof Element ? event.target.closest("button") : null;
       if (!target) return;
       const desiredPage = Number(target.dataset.page);
-      if (!Number.isNaN(desiredPage)) {
-        state.currentPage = Math.min(
-          Math.max(desiredPage, 1),
-          Math.max(1, Math.ceil(applyFilters().length / state.perPage)),
-        );
-        render();
-        window.scrollTo({ top: 0, behavior: "smooth" });
+      if (!Number.isNaN(desiredPage) && desiredPage > 0) {
+        const hasActiveFilters =
+          state.categories.size > 0 ||
+          state.presentations.size > 0 ||
+          state.search.trim() !== "";
+
+        if (hasActiveFilters) {
+          state.currentPage = Math.min(
+            Math.max(desiredPage, 1),
+            Math.max(1, Math.ceil(applyFilters().length / state.perPage)),
+          );
+          render();
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        } else {
+          const url = new URL(window.location.href);
+          if (desiredPage === 1) {
+            url.searchParams.delete("page");
+          } else {
+            url.searchParams.set("page", String(desiredPage));
+          }
+          window.location.href = url.toString();
+        }
       }
     });
 
