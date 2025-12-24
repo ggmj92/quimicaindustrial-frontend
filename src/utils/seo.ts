@@ -85,13 +85,28 @@ export interface FAQSchema {
   }>;
 }
 
+export interface WebSiteSchema {
+  "@context": string;
+  "@type": string;
+  name: string;
+  url: string;
+  potentialAction: {
+    "@type": string;
+    target: {
+      "@type": string;
+      urlTemplate: string;
+    };
+    "query-input": string;
+  };
+}
+
 export function generateOrganizationSchema(): OrganizationSchema {
   return {
     "@context": "https://schema.org",
     "@type": "Organization",
     name: "Química Industrial",
     url: "https://www.quimicaindustrial.pe",
-    logo: "https://www.quimicaindustrial.pe/images/qi-logo.png",
+    logo: "https://www.quimicaindustrial.pe/images/qi-logo-mobile.png",
     description:
       "Distribuidores de químicos industriales y materias primas en Lima, Perú. Más de 12 años de experiencia con soporte técnico especializado.",
     address: {
@@ -244,6 +259,24 @@ export function generateMetaDescription(
   }
 
   return `${product.name}${category} - Materia prima química de calidad certificada. Disponible en ${presentations}. Entrega en Lima y todo el Perú. Cotiza ahora.`;
+}
+
+export function generateWebSiteSchema(): WebSiteSchema {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "Química Industrial Perú",
+    url: "https://www.quimicaindustrial.pe",
+    potentialAction: {
+      "@type": "SearchAction",
+      target: {
+        "@type": "EntryPoint",
+        urlTemplate:
+          "https://www.quimicaindustrial.pe/products?search={search_term_string}",
+      },
+      "query-input": "required name=search_term_string",
+    },
+  };
 }
 
 export function truncateDescription(

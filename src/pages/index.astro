@@ -11,6 +11,7 @@ import {
   generateOrganizationSchema,
   generateLocalBusinessSchema,
   generateFAQSchema,
+  generateWebSiteSchema,
 } from "../utils/seo";
 
 // Fetch all data (except banners - those are fetched client-side)
@@ -26,6 +27,7 @@ const heroProduct = featuredProducts[0] ?? allProducts[0] ?? null;
 // SEO structured data
 const organizationSchema = generateOrganizationSchema();
 const localBusinessSchema = generateLocalBusinessSchema();
+const webSiteSchema = generateWebSiteSchema();
 const faqSchema = generateFAQSchema();
 ---
 
@@ -52,6 +54,10 @@ const faqSchema = generateFAQSchema();
     <script
       type="application/ld+json"
       set:html={JSON.stringify(localBusinessSchema)}
+    />
+    <script
+      type="application/ld+json"
+      set:html={JSON.stringify(webSiteSchema)}
     />
     <script type="application/ld+json" set:html={JSON.stringify(faqSchema)} />
   </Fragment>

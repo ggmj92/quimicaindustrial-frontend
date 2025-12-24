@@ -57,11 +57,17 @@ const ogImage = `${siteOrigin}/images/qi-logo-mobile.png`;
     <meta property="og:locale" content="es_PE" />
     <meta property="og:url" content={ogUrl} />
     <meta property="og:image" content={ogImage} />
+    <meta property="og:image:secure_url" content={ogImage} />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="512" />
+    <meta property="og:image:height" content="512" />
     <meta property="og:image:alt" content={title} />
+    <meta property="og:site_name" content="Química Industrial Perú" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImage} />
+    <meta name="twitter:image:alt" content={title} />
     <slot name="head" />
   </head>
   <body>
