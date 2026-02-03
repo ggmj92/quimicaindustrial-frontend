@@ -230,6 +230,28 @@ const serializedProducts = JSON.stringify(products);
     const form = document.querySelector("[data-quote-form]");
     const feedback = document.querySelector("[data-quote-feedback]");
 
+    // GTM Event: Track form start (when user first interacts with form)
+    let formStartTracked = false;
+    const trackFormStart = () => {
+      if (!formStartTracked) {
+        formStartTracked = true;
+        window.dataLayer = window.dataLayer || [];
+        window.dataLayer.push({
+          event: "form_start",
+          form_id: "quote_form",
+          form_name: "Solicitud de Cotización",
+        });
+      }
+    };
+
+    // Track form start on first input/select/textarea interaction
+    form?.addEventListener("input", trackFormStart, { once: true });
+    form?.addEventListener("change", trackFormStart, { once: true });
+    form?.addEventListener("focus", trackFormStart, {
+      capture: true,
+      once: true,
+    });
+
     // Modal elements
     const confirmModal = document.querySelector("[data-confirm-modal]");
     const confirmOkBtn = document.querySelector("[data-confirm-ok]");
@@ -871,6 +893,17 @@ const serializedProducts = JSON.stringify(products);
         const result = await response.json();
 
         if (result.success) {
+          // GTM Event: Form Submit
+          window.dataLayer = window.dataLayer || [];
+          window.dataLayer.push({
+            event: "form_submit",
+            form_id: "quote_form",
+            form_name: "Solicitud de Cotización",
+            quote_id: result.quoteId || result.quote?._id || null,
+            product_ids: products.map((p) => p.productId),
+            product_count: products.length,
+          });
+
           // Show success message
           feedback?.removeAttribute("hidden");
           feedback?.scrollIntoView({ behavior: "smooth", block: "center" });

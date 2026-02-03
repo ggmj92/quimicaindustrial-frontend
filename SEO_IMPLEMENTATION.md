@@ -49,7 +49,7 @@ This document outlines the complete SEO implementation for Química Industrial's
 **Meta Tags:**
 
 ```html
-<title>Química Industrial | Distribuidores de químicos en Lima</title>
+<title>Química Industrial | Distribuidores de químicos en Perú</title>
 <meta
   name="description"
   content="Catálogo de materias primas y químicos industriales..."
@@ -200,16 +200,16 @@ Every page has proper canonical tags:
 
 ### **Primary Keywords**
 
-- Químicos industriales Lima
+- Químicos industriales Perú
 - Materias primas químicas Perú
-- Distribuidores químicos Lima
+- Distribuidores químicos Perú
 - Solventes industriales
 - Ácidos químicos
 
 ### **Long-tail Keywords**
 
-- Comprar químicos industriales Lima
-- Distribuidores materias primas Lima
+- Comprar químicos industriales Perú
+- Distribuidores materias primas Perú
 - Químicos para industria alimentaria
 - Químicos para industria farmacéutica
 - Cotización químicos industriales Perú
@@ -220,6 +220,7 @@ Every page has proper canonical tags:
 - Químicos Surquillo
 - Químicos Perú
 - Distribuidor químicos Lima Metropolitana
+- Distribuidor químicos Perú
 
 ---
 

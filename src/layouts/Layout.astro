@@ -13,8 +13,8 @@ interface Props {
 }
 
 const {
-  title = "Química Industrial | Distribución de químicos en Lima, Perú",
-  description = "Distribuimos materias primas y químicos industriales en Lima, Perú. Logística ágil, soporte técnico y catálogo listo para integrarse con tu API de WordPress.",
+  title = "Química Industrial | Distribución de químicos en Perú",
+  description = "Distribuimos materias primas y químicos industriales en Perú. Logística ágil, soporte técnico y catálogo listo para integrarse con tu API de WordPress.",
   canonical,
   noIndex,
 } = Astro.props as Props;
@@ -68,6 +68,32 @@ const ogImage = `${siteOrigin}/images/qi-logo-mobile.png`;
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImage} />
     <meta name="twitter:image:alt" content={title} />
+
+    <!-- Facebook Domain Verification -->
+    <meta
+      name="facebook-domain-verification"
+      content="3cfu4brwsjbg9zhoxqlamjo3zucnhl"
+    />
+
+    <!-- Google Tag Manager - DataLayer -->
+    <script is:inline>
+      window.dataLayer = window.dataLayer || [];
+    </script>
+
+    <!-- Google Tag Manager -->
+    <script is:inline>
+      (function (w, d, s, l, i) {
+        w[l] = w[l] || [];
+        w[l].push({ "gtm.start": new Date().getTime(), event: "gtm.js" });
+        var f = d.getElementsByTagName(s)[0],
+          j = d.createElement(s),
+          dl = l != "dataLayer" ? "&l=" + l : "";
+        j.async = true;
+        j.src = "https://www.googletagmanager.com/gtm.js?id=" + i + dl;
+        f.parentNode.insertBefore(j, f);
+      })(window, document, "script", "dataLayer", "GTM-MHR6W5H");
+    </script>
+
     <slot name="head" />
   </head>
   <body>
@@ -369,6 +395,18 @@ const ogImage = `${siteOrigin}/images/qi-logo-mobile.png`;
           if (payload) {
             upsertItem(payload);
             document.dispatchEvent(new CustomEvent("qi-cart-open"));
+
+            // GTM Event: Add to Cart
+            window.dataLayer = window.dataLayer || [];
+            window.dataLayer.push({
+              event: "add_to_cart",
+              product_id: payload.productId,
+              product_name: payload.name,
+              presentation_id: payload.presentationId || null,
+              presentation: payload.presentation || null,
+              quantity: payload.quantity,
+              price: payload.price || null,
+            });
           }
         }
 
@@ -422,5 +460,15 @@ const ogImage = `${siteOrigin}/images/qi-logo-mobile.png`;
         }
       });
     </script>
+
+    <!-- Google Tag Manager (noscript) -->
+    <noscript>
+      <iframe
+        src="https://www.googletagmanager.com/ns.html?id=GTM-MHR6W5H"
+        height="0"
+        width="0"
+        style="display:none;visibility:hidden"></iframe>
+    </noscript>
+    <!-- End Google Tag Manager (noscript) -->
   </body>
 </html>

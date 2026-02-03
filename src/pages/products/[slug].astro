@@ -91,7 +91,7 @@ const productUrl = `https://www.quimicaindustrial.pe/products/${product.slug}`;
       categoryName && (
         <meta
           name="keywords"
-          content={`${product.name}, ${categoryName}, químicos industriales, materias primas, Lima, Perú`}
+          content={`${product.name}, ${categoryName}, químicos industriales, materias primas, Perú`}
         />
       )
     }
@@ -110,3 +110,16 @@ const productUrl = `https://www.quimicaindustrial.pe/products/${product.slug}`;
     relatedProducts={relatedProducts}
   />
 </Layout>
+
+<script define:vars={{ product, categoryName }}>
+  // GTM Event: View Product
+  window.dataLayer = window.dataLayer || [];
+  window.dataLayer.push({
+    event: "view_product",
+    product_id: product.id,
+    product_name: product.name,
+    product_slug: product.slug,
+    category: categoryName || null,
+    page_type: "product_detail",
+  });
+</script>

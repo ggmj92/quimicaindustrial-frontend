@@ -108,7 +108,7 @@ export function generateOrganizationSchema(): OrganizationSchema {
     url: "https://www.quimicaindustrial.pe",
     logo: "https://www.quimicaindustrial.pe/images/qi-logo-mobile.png",
     description:
-      "Distribuidores de químicos industriales y materias primas en Lima, Perú. Más de 12 años de experiencia con soporte técnico especializado.",
+      "Distribuidores de químicos industriales y materias primas en todo el Perú. Más de 12 años de experiencia con soporte técnico especializado.",
     address: {
       "@type": "PostalAddress",
       streetAddress: "Jr. Dante 236",
@@ -213,7 +213,7 @@ export function generateFAQSchema(): FAQSchema {
         name: "¿Realizan entregas en todo el Perú?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "Sí, realizamos entregas en todo el Perú. Contamos con despacho propio en Lima y trabajamos con transportistas certificados para envíos a provincias.",
+          text: "Sí, realizamos entregas en todo el Perú. Contamos con despacho propio y trabajamos con transportistas certificados para garantizar entregas seguras en todas las regiones.",
         },
       },
       {
@@ -234,10 +234,10 @@ export function generateFAQSchema(): FAQSchema {
       },
       {
         "@type": "Question",
-        name: "¿Cuál es el tiempo de entrega en Lima?",
+        name: "¿Cuál es el tiempo de entrega?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "Para Lima Metropolitana, el tiempo de entrega es de 24 a 48 horas dependiendo de la disponibilidad del producto y la zona de entrega.",
+          text: "Los tiempos de entrega varían según la ubicación. Contamos con despacho propio para entregas rápidas y trabajamos con transportistas certificados para garantizar tiempos competitivos en todo el Perú.",
         },
       },
     ],
@@ -255,10 +255,10 @@ export function generateMetaDescription(
     .join(", ");
 
   if (product.summary) {
-    return `${product.name}${category} - ${product.summary}. Disponible en ${presentations}. Cotiza ahora con Química Industrial en Lima, Perú.`;
+    return `${product.name}${category} - ${product.summary}. Disponible en ${presentations}. Cotiza ahora con Química Industrial en Perú.`;
   }
 
-  return `${product.name}${category} - Materia prima química de calidad certificada. Disponible en ${presentations}. Entrega en Lima y todo el Perú. Cotiza ahora.`;
+  return `${product.name}${category} - Materia prima química de calidad certificada. Disponible en ${presentations}. Entrega en todo el Perú. Cotiza ahora.`;
 }
 
 export function generateWebSiteSchema(): WebSiteSchema {
