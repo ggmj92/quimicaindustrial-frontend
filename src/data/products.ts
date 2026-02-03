@@ -148,17 +148,18 @@ export async function getProducts(): Promise<Product[]> {
 export async function getFeaturedProducts(): Promise<Product[]> {
   const { qiCategories, presentations } = await loadBaseData();
 
-  const qiFeatured = await qiApi.getFeaturedProducts();
-
-  if (qiFeatured.length > 0) {
-    return qiFeatured.map((p) =>
-      adaptQIProduct(p, qiCategories, presentations),
-    );
-  }
-
-  // Fallback: return first 6 products
+  // Get all products and sort by popularity (views + searches + quotes)
   const allProducts = await getProducts();
-  return allProducts.slice(0, 6);
+  
+  // Sort by popularity score (views + searches + totalQuotes * 10)
+  const sortedByPopularity = [...allProducts].sort((a, b) => {
+    const scoreA = (a.views || 0) + (a.searches || 0) + (a.totalQuotes || 0) * 10;
+    const scoreB = (b.views || 0) + (b.searches || 0) + (b.totalQuotes || 0) * 10;
+    return scoreB - scoreA;
+  });
+
+  // Return top 6 most popular products
+  return sortedByPopularity.slice(0, 6);
 }
 
 export async function getProductBySlug(
