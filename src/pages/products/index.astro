@@ -731,27 +731,12 @@ const breadcrumbSchema = generateBreadcrumbSchema([
       if (!target) return;
       const desiredPage = Number(target.dataset.page);
       if (!Number.isNaN(desiredPage) && desiredPage > 0) {
-        const hasActiveFilters =
-          state.categories.size > 0 ||
-          state.presentations.size > 0 ||
-          state.search.trim() !== "";
-
-        if (hasActiveFilters) {
-          state.currentPage = Math.min(
-            Math.max(desiredPage, 1),
-            Math.max(1, Math.ceil(applyFilters().length / state.perPage)),
-          );
-          render();
-          window.scrollTo({ top: 0, behavior: "smooth" });
-        } else {
-          const url = new URL(window.location.href);
-          if (desiredPage === 1) {
-            url.searchParams.delete("page");
-          } else {
-            url.searchParams.set("page", String(desiredPage));
-          }
-          window.location.href = url.toString();
-        }
+        state.currentPage = Math.min(
+          Math.max(desiredPage, 1),
+          Math.max(1, Math.ceil(applyFilters().length / state.perPage)),
+        );
+        render();
+        window.scrollTo({ top: 0, behavior: "smooth" });
       }
     });
 
