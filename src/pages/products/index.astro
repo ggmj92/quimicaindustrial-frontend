@@ -361,6 +361,10 @@ const breadcrumbSchema = generateBreadcrumbSchema([
                     <a
                       class="btn btn-outline"
                       href={`/products/${product.slug}`}
+                      data-view-product
+                      data-product-id={product.id}
+                      data-product-name={product.name}
+                      data-product-slug={product.slug}
                     >
                       Ver más
                     </a>
@@ -822,6 +826,30 @@ const breadcrumbSchema = generateBreadcrumbSchema([
       const view = target.dataset.view;
       if (view === "grid" || view === "list") {
         applyView(view);
+      }
+    });
+
+    // GTM Event: Track "Ver más" clicks
+    document.addEventListener("click", (event) => {
+      const target =
+        event.target instanceof Element
+          ? event.target.closest("[data-view-product]")
+          : null;
+      if (!target) return;
+
+      const productId = target.getAttribute("data-product-id");
+      const productName = target.getAttribute("data-product-name");
+      const productSlug = target.getAttribute("data-product-slug");
+
+      if (productId && productName) {
+        window.dataLayer = window.dataLayer || [];
+        window.dataLayer.push({
+          event: "view_product",
+          product_id: productId,
+          product_name: productName,
+          product_slug: productSlug,
+          page_type: "product_catalog",
+        });
       }
     });
   });

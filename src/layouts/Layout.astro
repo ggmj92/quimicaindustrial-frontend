@@ -395,6 +395,18 @@ const ogImage = `${siteOrigin}/images/qi-logo-mobile.png`;
           if (payload) {
             upsertItem(payload);
             document.dispatchEvent(new CustomEvent("qi-cart-open"));
+
+            // GTM Event: Add to Cart
+            window.dataLayer = window.dataLayer || [];
+            window.dataLayer.push({
+              event: "add_to_cart",
+              product_id: payload.productId,
+              product_name: payload.name,
+              presentation_id: payload.presentationId || null,
+              presentation: payload.presentation || null,
+              quantity: payload.quantity,
+              price: payload.price || null,
+            });
           }
         }
 
