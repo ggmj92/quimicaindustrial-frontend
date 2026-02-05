@@ -66,6 +66,7 @@ export interface Product {
   popularity: number;
   createdAt: string;
   featured?: boolean;
+  fiscalizado?: boolean;
   heroHighlights: string[];
   price: string | null;
   regularPrice: string | null;
@@ -150,11 +151,13 @@ export async function getFeaturedProducts(): Promise<Product[]> {
 
   // Get all products and sort by popularity (views + searches + quotes)
   const allProducts = await getProducts();
-  
+
   // Sort by popularity score (views + searches + totalQuotes * 10)
   const sortedByPopularity = [...allProducts].sort((a, b) => {
-    const scoreA = (a.views || 0) + (a.searches || 0) + (a.totalQuotes || 0) * 10;
-    const scoreB = (b.views || 0) + (b.searches || 0) + (b.totalQuotes || 0) * 10;
+    const scoreA =
+      (a.views || 0) + (a.searches || 0) + (a.totalQuotes || 0) * 10;
+    const scoreB =
+      (b.views || 0) + (b.searches || 0) + (b.totalQuotes || 0) * 10;
     return scoreB - scoreA;
   });
 

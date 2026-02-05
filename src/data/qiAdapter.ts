@@ -155,6 +155,7 @@ export function adaptQIProduct(
       qiProduct.views + qiProduct.searches + qiProduct.totalQuotes * 10,
     createdAt: qiProduct.createdAt,
     featured: qiProduct.featured,
+    fiscalizado: qiProduct.fiscalizado,
     heroHighlights: heroHighlights.slice(0, 6),
 
     // Price fields (not used in QI, set to null)

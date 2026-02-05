@@ -29,6 +29,24 @@
   );
 }
 
+.pdp-fiscalizado-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  border-radius: 8px;
+  background: #fef2f2;
+  color: #991b1b;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  border: 2px solid #fca5a5;
+  margin-bottom: 1rem;
+}
+
+.pdp-fiscalizado-badge svg {
+  flex-shrink: 0;
+}
+
 .product-summary {
   font-size: 1.05rem;
   color: var(--color-muted);

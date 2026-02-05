@@ -40,6 +40,7 @@ export interface QIProduct {
   sku?: string;
   status: "draft" | "published";
   featured: boolean;
+  fiscalizado: boolean;
   categoryIds: string[];
   presentationIds: string[];
   relatedProductIds: string[];
