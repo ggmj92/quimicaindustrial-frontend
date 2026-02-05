@@ -1688,9 +1688,7 @@ const faqSchema = generateFAQSchema();
       }
 
       if (results.length === 0) {
-        searchDropdown.innerHTML =
-          '<p style="padding: 1rem; text-align: center; color: #64748b;">No se encontraron resultados</p>';
-        searchDropdown.hidden = false;
+        searchDropdown.hidden = true;
         return;
       }
 
