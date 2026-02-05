@@ -78,14 +78,15 @@ const faqSchema = generateFAQSchema();
         <!-- Left Column: Main Text -->
         <div class="hero-text">
           <span class="hero-tag">Distribución en todo el Perú</span>
-          <h1 class="hero-title">Insumos químicos y materias primas para la industria</h1>
+          <h1 class="hero-title">
+            Insumos químicos y materias primas para la industria
+          </h1>
           <p class="hero-description">
             Impulsamos tu producción con químicos industriales de alta calidad,
             respaldo técnico especializado y entregas rápidas a nivel nacional.
             <br /><br />
-            Abastecemos a los sectores alimenticio, farmacéutico, minero y de
-            limpieza con productos certificados, trazabilidad garantizada y
-            atención personalizada.
+            Abastecemos a los sectores alimenticio, farmacéutico, minero y de limpieza
+            con productos certificados, trazabilidad garantizada y atención personalizada.
           </p>
         </div>
 
@@ -1696,8 +1697,8 @@ const faqSchema = generateFAQSchema();
       searchDropdown.innerHTML = `<ul class="search-results">${results
         .map((product: any) => {
           const name = escapeHtml(product.name);
-          const slug = encodeURIComponent(String(product.slug || ""));
-          return `<li><a href="/products/${slug}" class="search-result-link">${name}</a></li>`;
+          const encodedName = encodeURIComponent(String(product.name || ""));
+          return `<li><a href="/products?search=${encodedName}" class="search-result-link">${name}</a></li>`;
         })
         .join("")}</ul>`;
       searchDropdown.hidden = false;
