@@ -904,24 +904,13 @@ const serializedProducts = JSON.stringify(products);
             product_count: products.length,
           });
 
-          // Show success message
-          feedback?.removeAttribute("hidden");
-          feedback?.scrollIntoView({ behavior: "smooth", block: "center" });
-
           // Clear cart
           if (window.qiCart) {
             window.qiCart.clear();
           }
 
-          // Reset form after 3 seconds
-          setTimeout(() => {
-            form.reset();
-            feedback?.setAttribute("hidden", "");
-            productList.innerHTML = "";
-            productList?.appendChild(createProductItem());
-            personalFields.style.display = "none";
-            companyFields.style.display = "none";
-          }, 3000);
+          // Redirect to thank you page
+          window.location.href = "/gracias";
         } else {
           alert(
             "Error al enviar la cotización: " +

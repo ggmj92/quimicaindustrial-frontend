@@ -91,12 +91,22 @@ const ogImage = `${siteOrigin}/images/qi-logo-mobile.png`;
         j.async = true;
         j.src = "https://www.googletagmanager.com/gtm.js?id=" + i + dl;
         f.parentNode.insertBefore(j, f);
-      })(window, document, "script", "dataLayer", "GTM-MHR6W5H");
+      })(window, document, "script", "dataLayer", "GTM-TDBJ79DR");
     </script>
 
     <slot name="head" />
   </head>
   <body>
+    <!-- Google Tag Manager (noscript) -->
+    <noscript>
+      <iframe
+        src="https://www.googletagmanager.com/ns.html?id=GTM-TDBJ79DR"
+        height="0"
+        width="0"
+        style="display:none;visibility:hidden"></iframe>
+    </noscript>
+    <!-- End Google Tag Manager (noscript) -->
+
     <Header />
     <main>
       <slot />
@@ -460,15 +470,5 @@ const ogImage = `${siteOrigin}/images/qi-logo-mobile.png`;
         }
       });
     </script>
-
-    <!-- Google Tag Manager (noscript) -->
-    <noscript>
-      <iframe
-        src="https://www.googletagmanager.com/ns.html?id=GTM-MHR6W5H"
-        height="0"
-        width="0"
-        style="display:none;visibility:hidden"></iframe>
-    </noscript>
-    <!-- End Google Tag Manager (noscript) -->
   </body>
 </html>
