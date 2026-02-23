@@ -6,7 +6,9 @@ export default defineConfig({
   output: 'server',
   adapter: vercel({
     isr: {
-      expiration: 3600,
+      // Revalidate every 5 minutes to quickly reflect dashboard changes
+      // while maintaining good performance
+      expiration: 300,
     },
   }),
   integrations: [react()],

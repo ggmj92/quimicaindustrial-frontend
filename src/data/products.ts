@@ -100,46 +100,38 @@ export interface Product {
   totalQuotes?: number;
 }
 
-// Cache
-let cachedProducts: Product[] | null = null;
-let cachedCategories: ProductCategory[] | null = null;
-let cachedQICategories: qiApi.QICategory[] | null = null;
+// Cache only presentations (rarely change)
 let cachedPresentations: qiApi.QIPresentation[] | null = null;
 
 // Load all data needed for adaptation
+// Categories and products are always fetched fresh to reflect dashboard changes
 async function loadBaseData() {
-  if (!cachedQICategories) {
-    cachedQICategories = await qiApi.getCategories({ includeCount: true });
-    cachedCategories = cachedQICategories.map(adaptQICategory);
-  }
+  // Always fetch fresh categories to reflect changes
+  const qiCategories = await qiApi.getCategories({ includeCount: true });
+  const categories = qiCategories.map(adaptQICategory);
 
+  // Cache presentations as they rarely change
   if (!cachedPresentations) {
     cachedPresentations = await qiApi.getPresentations();
   }
 
   return {
-    qiCategories: cachedQICategories,
-    categories: cachedCategories,
+    qiCategories,
+    categories,
     presentations: cachedPresentations,
   };
 }
 
 export async function getProducts(): Promise<Product[]> {
-  if (cachedProducts) {
-    return cachedProducts;
-  }
-
   try {
     const { qiCategories, presentations } = await loadBaseData();
 
-    // Get ALL products (no status filter for now - most are in draft)
-    let qiProducts = await qiApi.getProducts({ limit: 1000 });
+    // Always fetch fresh products to reflect dashboard changes
+    const qiProducts = await qiApi.getProducts({ limit: 1000 });
 
-    cachedProducts = qiProducts.map((p) =>
+    return qiProducts.map((p) =>
       adaptQIProduct(p, qiCategories || [], presentations || []),
     );
-
-    return cachedProducts;
   } catch (error) {
     console.error("Error loading products:", error);
     return [];
@@ -250,14 +242,9 @@ export async function getRelatedProducts(
 }
 
 export async function getCategories(): Promise<ProductCategory[]> {
-  if (cachedCategories) {
-    return cachedCategories;
-  }
-
+  // Always fetch fresh categories to reflect dashboard changes
   const qiCategories = await qiApi.getCategories({ includeCount: true });
-  cachedCategories = qiCategories.map(adaptQICategory);
-
-  return cachedCategories;
+  return qiCategories.map(adaptQICategory);
 }
 
 // Additional helper functions for the new API
