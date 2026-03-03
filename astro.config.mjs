@@ -1,15 +1,15 @@
 import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
 import vercel from '@astrojs/vercel';
+import sitemap from '@astrojs/sitemap';
 
 export default defineConfig({
+  site: 'https://www.quimicaindustrial.pe',
   output: 'server',
   adapter: vercel({
     isr: {
-      // Revalidate every 5 minutes to quickly reflect dashboard changes
-      // while maintaining good performance
       expiration: 300,
     },
   }),
-  integrations: [react()],
+  integrations: [react(), sitemap()],
 });
