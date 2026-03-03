@@ -14,7 +14,7 @@ const serializedProducts = JSON.stringify(products);
 >
   <section class="quote">
     <div class="container quote-layout">
-      <form class="quote-form" data-quote-form>
+      <form id="formulario-cotizacion" class="quote-form" data-quote-form>
         <h1>Solicitud de Cotización</h1>
         <p class="quote-intro">
           Complete el formulario con los productos que necesita y sus datos de
@@ -899,7 +899,7 @@ const serializedProducts = JSON.stringify(products);
             event: "form_submit",
             form_id: "quote_form",
             form_name: "Solicitud de Cotización",
-            quote_id: result.quoteId || result.quote?._id || null,
+            quote_id: result.data?.id || null,
             product_ids: products.map((p) => p.productId),
             product_count: products.length,
           });
