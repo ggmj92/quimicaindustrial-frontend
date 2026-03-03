@@ -80,7 +80,7 @@ const contactPageSchema = {
           </div>
         </div>
 
-        <form class="contact-form-card" data-contact-form>
+        <form id="contact-form" class="contact-form-card" data-contact-form>
           <h2>Envíanos un mensaje</h2>
           <input
             type="text"
@@ -143,8 +143,8 @@ const contactPageSchema = {
         const result = await response.json().catch(() => null);
 
         if (response.ok && (result?.success ?? true)) {
-          feedback?.removeAttribute("hidden");
-          form.reset();
+          // Redirect to thank you page for GTM tracking
+          window.location.href = "/gracias-contacto";
         } else {
           alert("Error al enviar el mensaje. Por favor, intenta de nuevo.");
         }

@@ -1,0 +1,78 @@
+---
+import Layout from "../layouts/Layout.astro";
+import "../styles/pages/gracias.css";
+
+const pageTitle = "Gracias por contactarnos | Química Industrial";
+const pageDescription =
+  "Tu mensaje ha sido enviado exitosamente. Pronto estaremos en contacto.";
+---
+
+<Layout
+  title={pageTitle}
+  description={pageDescription}
+  canonical="https://www.quimicaindustrial.pe/gracias-contacto"
+>
+  <section class="gracias-section">
+    <div class="container">
+      <div class="gracias-card">
+        <div class="success-icon">
+          <svg
+            width="80"
+            height="80"
+            viewBox="0 0 80 80"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <circle cx="40" cy="40" r="40" fill="#10b981"></circle>
+            <path
+              d="M25 40L35 50L55 30"
+              stroke="white"
+              stroke-width="4"
+              stroke-linecap="round"
+              stroke-linejoin="round"></path>
+          </svg>
+        </div>
+
+        <h1>¡Gracias por contactarnos!</h1>
+
+        <p class="success-message">
+          Tu mensaje ha sido enviado exitosamente. Nuestro equipo se pondrá en
+          contacto contigo en las próximas horas.
+        </p>
+
+        <div class="next-steps">
+          <h2>¿Qué sigue?</h2>
+          <ul>
+            <li>
+              <strong>Revisaremos tu mensaje</strong> y te responderemos a la brevedad
+            </li>
+            <li>
+              <strong>Te contactaremos</strong> por el medio que prefieras
+            </li>
+            <li>
+              <strong>Resolveremos tus dudas</strong> y te brindaremos la mejor atención
+            </li>
+          </ul>
+        </div>
+
+        <div class="cta-buttons">
+          <a href="/" class="btn btn-primary">Volver al inicio</a>
+          <a href="/productos" class="btn btn-secondary">Ver productos</a>
+        </div>
+
+        <div class="contact-info">
+          <p>
+            <strong>¿Necesitas ayuda inmediata?</strong>
+          </p>
+          <p>
+            Llámanos al <a href="tel:+51933634055">+51 933 634 055</a> o escríbenos
+            a
+            <a href="mailto:contacto@quimicaindustrial.pe"
+              >contacto@quimicaindustrial.pe</a
+            >
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+</Layout>
