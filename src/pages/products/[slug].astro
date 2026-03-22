@@ -3,6 +3,7 @@ import Layout from "../../layouts/Layout.astro";
 import ProductDetail from "../../components/ProductDetail.astro";
 import {
   getProducts,
+  getProductBySlug,
   getCategories,
   getRelatedProducts,
 } from "../../data/products";
@@ -25,9 +26,8 @@ export async function getStaticPaths() {
 const { slug } = Astro.params;
 
 // Get the product by slug
-const product = await getProducts().then((products) =>
-  products.find((p) => p.slug === slug),
-);
+// Get the product by slug
+const product = await getProductBySlug(slug);
 
 if (!product) {
   return Astro.redirect("/products");
