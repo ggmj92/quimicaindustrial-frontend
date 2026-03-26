@@ -172,6 +172,11 @@ export async function getProducts(params?: {
   return products || [];
 }
 
+export async function getProductSlugs(): Promise<string[]> {
+  const result = await fetchAPI<{ slug: string }[]>("/products/slugs");
+  return result ? result.map((r) => r.slug) : [];
+}
+
 export async function getProductBySlug(
   slug: string,
 ): Promise<QIProduct | null> {
