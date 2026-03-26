@@ -122,6 +122,10 @@ async function loadBaseData() {
   };
 }
 
+export async function getProductSlugs(): Promise<string[]> {
+  return qiApi.getProductSlugs();
+}
+
 export async function getProducts(): Promise<Product[]> {
   try {
     const { qiCategories, presentations } = await loadBaseData();
@@ -141,20 +145,8 @@ export async function getProducts(): Promise<Product[]> {
 export async function getFeaturedProducts(): Promise<Product[]> {
   const { qiCategories, presentations } = await loadBaseData();
 
-  // Get all products and sort by popularity (views + searches + quotes)
-  const allProducts = await getProducts();
-
-  // Sort by popularity score (views + searches + totalQuotes * 10)
-  const sortedByPopularity = [...allProducts].sort((a, b) => {
-    const scoreA =
-      (a.views || 0) + (a.searches || 0) + (a.totalQuotes || 0) * 10;
-    const scoreB =
-      (b.views || 0) + (b.searches || 0) + (b.totalQuotes || 0) * 10;
-    return scoreB - scoreA;
-  });
-
-  // Return top 6 most popular products
-  return sortedByPopularity.slice(0, 6);
+  const qiProducts = await qiApi.getFeaturedProducts();
+  return qiProducts.map((p) => adaptQIProduct(p, qiCategories, presentations));
 }
 
 export async function getProductBySlug(
@@ -180,65 +172,39 @@ export async function getRelatedProducts(
 ): Promise<RelatedProductWithReason[]> {
   const { qiCategories, presentations } = await loadBaseData();
 
-  // First get the current product to find its ID and relatedProducts
   const currentProduct = await qiApi.getProductBySlug(slug);
 
   if (!currentProduct) {
-    // Fallback: return random products
-    const allProducts = await getProducts();
-    return allProducts.filter((p) => p.slug !== slug).slice(0, 3);
+    return [];
   }
 
-  // Use relatedProducts array if available (has reasoning), otherwise fall back to relatedProductIds
+  // Use relatedProducts array if available (includes AI-generated reasoning)
   if (
     currentProduct.relatedProducts &&
     currentProduct.relatedProducts.length > 0
   ) {
-    // Get product IDs from relatedProducts array
     const relatedIds = currentProduct.relatedProducts.map((rp) => rp.productId);
 
-    // Fetch those products
     const relatedProductsData = await Promise.all(
       relatedIds.slice(0, 6).map((id) => qiApi.getProductById(id)),
     );
 
-    // Map with reasoning
-    const relatedWithReason: RelatedProductWithReason[] = relatedProductsData
+    return relatedProductsData
       .filter((p) => p !== null)
       .map((p) => {
         const adapted = adaptQIProduct(p!, qiCategories, presentations);
         const relationshipInfo = currentProduct.relatedProducts?.find(
           (rp) => String(rp.productId) === String(p!._id),
         );
-        return {
-          ...adapted,
-          relationshipReason: relationshipInfo?.reason,
-        };
+        return { ...adapted, relationshipReason: relationshipInfo?.reason };
       });
-
-    return relatedWithReason;
   }
 
-  // Fallback: use old relatedProductIds
+  // Fall back to backend category-scoped related products query
   const qiRelated = await qiApi.getRelatedProducts(currentProduct._id);
-
-  if (qiRelated.length > 0) {
-    return qiRelated
-      .slice(0, 6)
-      .map((p) => adaptQIProduct(p, qiCategories, presentations));
-  }
-
-  // Fallback: get products from same categories
-  const allProducts = await getProducts();
-  const related = allProducts.filter(
-    (p) =>
-      p.slug !== slug &&
-      p.categories.some((cat) => currentProduct.categoryIds?.includes(cat)),
-  );
-
-  return related.length > 0
-    ? related.slice(0, 6)
-    : allProducts.filter((p) => p.slug !== slug).slice(0, 6);
+  return qiRelated
+    .slice(0, 6)
+    .map((p) => adaptQIProduct(p, qiCategories, presentations));
 }
 
 export async function getCategories(): Promise<ProductCategory[]> {

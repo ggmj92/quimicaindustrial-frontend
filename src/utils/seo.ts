@@ -52,10 +52,9 @@ export interface ProductSchema {
     "@type": string;
     name: string;
   };
-  offers: {
+  seller: {
     "@type": string;
-    availability: string;
-    priceCurrency: string;
+    name: string;
     url: string;
   };
   category?: string;
@@ -170,11 +169,10 @@ export function generateProductSchema(
       "@type": "Brand",
       name: "Química Industrial",
     },
-    offers: {
-      "@type": "Offer",
-      availability: "https://schema.org/InStock",
-      priceCurrency: "PEN",
-      url: productUrl,
+    seller: {
+      "@type": "Organization",
+      name: "Química Industrial",
+      url: baseUrl,
     },
     ...(categoryName && { category: categoryName }),
   };

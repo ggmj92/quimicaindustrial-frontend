@@ -1,11 +1,7 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import "../styles/pages/home.css";
-import {
-  getFeaturedProducts,
-  getCategories,
-  getProducts,
-} from "../data/products";
+import { getFeaturedProducts, getCategories } from "../data/products";
 import type { Product } from "../data/products";
 import {
   generateOrganizationSchema,
@@ -14,15 +10,9 @@ import {
   generateWebSiteSchema,
 } from "../utils/seo";
 
-// Fetch all data (except banners - those are fetched client-side)
-const allProducts = await getProducts();
 const categories = await getCategories();
-
-// Get featured products (marked as featured OR most viewed)
 const featuredProducts = await getFeaturedProducts();
-
-// Use first featured product or first product for hero
-const heroProduct = featuredProducts[0] ?? allProducts[0] ?? null;
+const heroProduct = featuredProducts[0] ?? null;
 
 // SEO structured data
 const organizationSchema = generateOrganizationSchema();

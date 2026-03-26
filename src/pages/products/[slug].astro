@@ -2,7 +2,7 @@
 import Layout from "../../layouts/Layout.astro";
 import ProductDetail from "../../components/ProductDetail.astro";
 import {
-  getProducts,
+  getProductSlugs,
   getProductBySlug,
   getCategories,
   getRelatedProducts,
@@ -17,10 +17,8 @@ import {
 import "../../styles/pages/product-detail.css";
 
 export async function getStaticPaths() {
-  const products = await getProducts();
-  return products.map((product) => ({
-    params: { slug: product.slug },
-  }));
+  const slugs = await getProductSlugs();
+  return slugs.map((slug) => ({ params: { slug } }));
 }
 
 const { slug } = Astro.params;
