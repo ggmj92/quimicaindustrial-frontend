@@ -5,12 +5,12 @@ import sitemap from '@astrojs/sitemap';
 
 const getProductUrls = async () => {
   try {
-    const res = await fetch('https://oregonchem-backend.onrender.com/api/qi/products?limit=500&status=published');
+    const res = await fetch('https://oregonchem-backend.onrender.com/api/qi/products/slugs');
     const data = await res.json();
-    const products = data.data || data.products || [];
-    return products.map((p) => `https://www.quimicaindustrial.pe/products/${p.slug}`);
+    const slugs = data.data || [];
+    return slugs.map((p) => `https://www.quimicaindustrial.pe/products/${p.slug}`);
   } catch (e) {
-    console.warn('Sitemap: could not fetch products', e);
+    console.warn('Sitemap: could not fetch product slugs', e);
     return [];
   }
 };
