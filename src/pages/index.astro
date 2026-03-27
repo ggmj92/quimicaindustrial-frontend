@@ -58,6 +58,16 @@ const faqSchema = generateFAQSchema();
       set:html={JSON.stringify(webSiteSchema)}
     />
     <script type="application/ld+json" set:html={JSON.stringify(faqSchema)} />
+    {
+      firstBanner && (
+        <link
+          rel="preload"
+          as="image"
+          href={firstBanner.image.url}
+          fetchpriority="high"
+        />
+      )
+    }
   </Fragment>
   <!-- Banner Carousel -->
   <section
@@ -1001,7 +1011,6 @@ const faqSchema = generateFAQSchema();
     margin: 0;
     padding: 0;
     line-height: 0;
-    aspect-ratio: 1920 / 600;
   }
 
   .banner-slides {
@@ -1030,6 +1039,7 @@ const faqSchema = generateFAQSchema();
     height: auto;
     display: block;
     object-fit: cover;
+    aspect-ratio: 1920 / 600;
   }
 
   .banner-overlay {
