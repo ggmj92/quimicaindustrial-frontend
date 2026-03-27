@@ -1,8 +1,13 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import "../styles/pages/home.css";
-import { getFeaturedProducts, getCategories } from "../data/products";
+import {
+  getFeaturedProducts,
+  getCategories,
+  getHomepageBanners,
+} from "../data/products";
 import type { Product } from "../data/products";
+import type { QIBanner } from "../data/qiApi";
 import {
   generateOrganizationSchema,
   generateLocalBusinessSchema,
@@ -13,6 +18,9 @@ import {
 const categories = await getCategories();
 const featuredProducts = await getFeaturedProducts();
 const heroProduct = featuredProducts[0] ?? null;
+const banners: QIBanner[] = await getHomepageBanners().catch(() => []);
+const firstBanner: QIBanner | null = banners[0] ?? null;
+const remainingBanners: QIBanner[] = banners.slice(1);
 
 // SEO structured data
 const organizationSchema = generateOrganizationSchema();
@@ -51,10 +59,81 @@ const faqSchema = generateFAQSchema();
     />
     <script type="application/ld+json" set:html={JSON.stringify(faqSchema)} />
   </Fragment>
-  <!-- Banner Carousel (loaded client-side) -->
-  <section class="banner-carousel" id="banner-carousel" style="display: none;">
-    <div class="banner-slides" id="banner-slides">
-      <!-- Banners will be loaded here via JavaScript -->
+  <!-- Banner Carousel -->
+  <section
+    class="banner-carousel"
+    id="banner-carousel"
+    style={firstBanner ? "" : "display: none;"}
+  >
+    <div
+      class="banner-slides"
+      id="banner-slides"
+      data-remaining={JSON.stringify(remainingBanners)}
+    >
+      {
+        firstBanner && (
+          <div class="banner-slide" data-active="true">
+            {firstBanner.link?.url ? (
+              <a
+                href={firstBanner.link.url}
+                target={firstBanner.link.openInNewTab ? "_blank" : "_self"}
+              >
+                <img
+                  src={firstBanner.image.url}
+                  alt={firstBanner.image.alt || firstBanner.title}
+                  width={firstBanner.image.width || 1920}
+                  height={firstBanner.image.height || 600}
+                  fetchpriority="high"
+                  loading="eager"
+                />
+                {firstBanner.overlay?.title && (
+                  <div
+                    class="banner-overlay"
+                    style={`color: ${firstBanner.overlay.textColor}; background: ${firstBanner.overlay.backgroundColor}`}
+                  >
+                    <h2>{firstBanner.overlay.title}</h2>
+                    {firstBanner.overlay.subtitle && (
+                      <p>{firstBanner.overlay.subtitle}</p>
+                    )}
+                    {firstBanner.overlay.buttonText && (
+                      <span class="banner-btn">
+                        {firstBanner.overlay.buttonText}
+                      </span>
+                    )}
+                  </div>
+                )}
+              </a>
+            ) : (
+              <>
+                <img
+                  src={firstBanner.image.url}
+                  alt={firstBanner.image.alt || firstBanner.title}
+                  width={firstBanner.image.width || 1920}
+                  height={firstBanner.image.height || 600}
+                  fetchpriority="high"
+                  loading="eager"
+                />
+                {firstBanner.overlay?.title && (
+                  <div
+                    class="banner-overlay"
+                    style={`color: ${firstBanner.overlay.textColor}; background: ${firstBanner.overlay.backgroundColor}`}
+                  >
+                    <h2>{firstBanner.overlay.title}</h2>
+                    {firstBanner.overlay.subtitle && (
+                      <p>{firstBanner.overlay.subtitle}</p>
+                    )}
+                    {firstBanner.overlay.buttonText && (
+                      <span class="banner-btn">
+                        {firstBanner.overlay.buttonText}
+                      </span>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )
+      }
     </div>
     <div class="banner-controls" id="banner-controls" style="display: none;">
       <button class="banner-prev" aria-label="Anterior">‹</button>
@@ -922,6 +1001,7 @@ const faqSchema = generateFAQSchema();
     margin: 0;
     padding: 0;
     line-height: 0;
+    aspect-ratio: 1920 / 600;
   }
 
   .banner-slides {
@@ -1527,106 +1607,79 @@ const faqSchema = generateFAQSchema();
 </style>
 
 <script>
-  // Banner Carousel - Client-side loading
-  async function loadBanners() {
-    try {
-      const API_URL =
-        import.meta.env.PUBLIC_QI_API_URL ||
-        "https://oregonchem-backend.onrender.com/api/qi";
+  // Banner Carousel - append remaining slides (slide 0 is SSR-rendered)
+  function initBanners() {
+    const carousel = document.getElementById("banner-carousel");
+    const slidesContainer = document.getElementById("banner-slides");
+    const controlsContainer = document.getElementById("banner-controls");
 
-      const response = await fetch(`${API_URL}/banners/active/homepage-hero`);
-      const data = await response.json();
+    if (!carousel || !slidesContainer) return;
 
-      if (!data.success || !data.data || data.data.length === 0) {
-        return; // No banners to show
-      }
+    // Read remaining banners from SSR data attribute
+    const remainingRaw = slidesContainer.getAttribute("data-remaining");
+    const remaining: any[] = remainingRaw ? JSON.parse(remainingRaw) : [];
 
-      const banners = data.data;
-      const carousel = document.getElementById("banner-carousel");
-      const slidesContainer = document.getElementById("banner-slides");
-      const controlsContainer = document.getElementById("banner-controls");
-
-      if (!carousel || !slidesContainer) return;
-
-      // Build banner HTML
-      slidesContainer.innerHTML = banners
-        .map((banner: any, index: number) => {
-          const slideContent = `
-          <img src="${banner.image.url}" alt="${banner.image.alt || banner.title}" />
-          ${
-            banner.overlay?.title
-              ? `
-            <div class="banner-overlay" style="color: ${banner.overlay.textColor}; background: ${banner.overlay.backgroundColor}">
+    // Append remaining slides (first slide already in DOM from SSR)
+    remaining.forEach((banner: any) => {
+      const slideContent = `
+        <img src="${banner.image.url}" alt="${banner.image.alt || banner.title}" width="${banner.image.width || 1920}" height="${banner.image.height || 600}" loading="lazy" />
+        ${
+          banner.overlay?.title
+            ? `<div class="banner-overlay" style="color: ${banner.overlay.textColor}; background: ${banner.overlay.backgroundColor}">
               <h2>${banner.overlay.title}</h2>
               ${banner.overlay.subtitle ? `<p>${banner.overlay.subtitle}</p>` : ""}
               ${banner.overlay.buttonText ? `<span class="banner-btn">${banner.overlay.buttonText}</span>` : ""}
-            </div>
-          `
-              : ""
-          }
-        `;
+            </div>`
+            : ""
+        }
+      `;
+      const slideEl = document.createElement("div");
+      slideEl.className = "banner-slide";
+      slideEl.setAttribute("data-active", "false");
+      slideEl.innerHTML = banner.link?.url
+        ? `<a href="${banner.link.url}" target="${banner.link.openInNewTab ? "_blank" : "_self"}">${slideContent}</a>`
+        : slideContent;
+      slidesContainer.appendChild(slideEl);
+    });
 
-          return `
-          <div class="banner-slide" data-active="${index === 0}">
-            ${
-              banner.link?.url
-                ? `
-              <a href="${banner.link.url}" target="${banner.link.openInNewTab ? "_blank" : "_self"}">
-                ${slideContent}
-              </a>
-            `
-                : slideContent
-            }
-          </div>
-        `;
-        })
-        .join("");
+    // Show controls if multiple banners
+    const bannerSlides = document.querySelectorAll(".banner-slide");
+    if (bannerSlides.length > 1 && controlsContainer) {
+      controlsContainer.style.display = "flex";
+    }
 
-      // Show carousel
-      carousel.style.display = "block";
+    // Initialize carousel controls
+    const prevBtn = document.querySelector(".banner-prev");
+    const nextBtn = document.querySelector(".banner-next");
+    let currentSlide = 0;
 
-      // Show controls if multiple banners
-      if (banners.length > 1 && controlsContainer) {
-        controlsContainer.style.display = "flex";
-      }
+    function showSlide(index: number) {
+      bannerSlides.forEach((slide, i) => {
+        slide.setAttribute("data-active", i === index ? "true" : "false");
+      });
+    }
 
-      // Initialize carousel controls
-      const bannerSlides = document.querySelectorAll(".banner-slide");
-      const prevBtn = document.querySelector(".banner-prev");
-      const nextBtn = document.querySelector(".banner-next");
-      let currentSlide = 0;
+    if (prevBtn && nextBtn && bannerSlides.length > 1) {
+      prevBtn.addEventListener("click", () => {
+        currentSlide =
+          (currentSlide - 1 + bannerSlides.length) % bannerSlides.length;
+        showSlide(currentSlide);
+      });
 
-      function showSlide(index: number) {
-        bannerSlides.forEach((slide, i) => {
-          slide.setAttribute("data-active", i === index ? "true" : "false");
-        });
-      }
+      nextBtn.addEventListener("click", () => {
+        currentSlide = (currentSlide + 1) % bannerSlides.length;
+        showSlide(currentSlide);
+      });
 
-      if (prevBtn && nextBtn && bannerSlides.length > 1) {
-        prevBtn.addEventListener("click", () => {
-          currentSlide =
-            (currentSlide - 1 + bannerSlides.length) % bannerSlides.length;
-          showSlide(currentSlide);
-        });
-
-        nextBtn.addEventListener("click", () => {
-          currentSlide = (currentSlide + 1) % bannerSlides.length;
-          showSlide(currentSlide);
-        });
-
-        // Auto-advance every 5 seconds
-        setInterval(() => {
-          currentSlide = (currentSlide + 1) % bannerSlides.length;
-          showSlide(currentSlide);
-        }, 5000);
-      }
-    } catch (error) {
-      console.error("Error loading banners:", error);
+      // Auto-advance every 5 seconds
+      setInterval(() => {
+        currentSlide = (currentSlide + 1) % bannerSlides.length;
+        showSlide(currentSlide);
+      }, 5000);
     }
   }
 
-  // Load banners when page loads
-  loadBanners();
+  initBanners();
 
   // Search Functionality
   const escapeHtml = (value: unknown) =>
