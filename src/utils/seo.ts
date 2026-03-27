@@ -123,7 +123,12 @@ export function generateOrganizationSchema(): OrganizationSchema {
       areaServed: "PE",
       availableLanguage: "Spanish",
     },
-    sameAs: [],
+    sameAs: [
+      "https://www.linkedin.com/company/quimica-industrial/",
+      "https://www.facebook.com/quimicaindustrialperu/",
+      "https://www.instagram.com/quimicaindustrial.pe/",
+      "https://wa.me/51933634055",
+    ],
   };
 }
 
