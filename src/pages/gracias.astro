@@ -147,3 +147,14 @@ const pageDescription =
     </div>
   </section>
 </Layout>
+
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const quoteId = params.get("quote_id") || null;
+  window.dataLayer = window.dataLayer || [];
+  window.dataLayer.push({
+    event: "quote_confirmed",
+    page_type: "thank_you",
+    quote_id: quoteId,
+  });
+</script>

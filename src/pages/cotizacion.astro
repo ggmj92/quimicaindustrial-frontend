@@ -910,7 +910,8 @@ const serializedProducts = JSON.stringify(products);
             product_ids: products.map((p) => p.productId),
             product_count: products.length,
             eventCallback: () => {
-              window.location.href = "/gracias";
+              const qid = result.data?.id || "";
+              window.location.href = `/gracias${qid ? `?quote_id=${encodeURIComponent(qid)}` : ""}`;
             },
             eventTimeout: 2000,
           });
