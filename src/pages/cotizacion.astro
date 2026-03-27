@@ -893,7 +893,14 @@ const serializedProducts = JSON.stringify(products);
         const result = await response.json();
 
         if (result.success) {
+          // Clear cart before GTM fires so it doesn't block the callback
+          if (window.qiCart) {
+            window.qiCart.clear();
+          }
+
           // GTM Event: Form Submit
+          // eventCallback fires after all GTM tags have processed the event.
+          // eventTimeout ensures the redirect still happens within 2s if GTM is blocked.
           window.dataLayer = window.dataLayer || [];
           window.dataLayer.push({
             event: "form_submit",
@@ -902,15 +909,11 @@ const serializedProducts = JSON.stringify(products);
             quote_id: result.data?.id || null,
             product_ids: products.map((p) => p.productId),
             product_count: products.length,
+            eventCallback: () => {
+              window.location.href = "/gracias";
+            },
+            eventTimeout: 2000,
           });
-
-          // Clear cart
-          if (window.qiCart) {
-            window.qiCart.clear();
-          }
-
-          // Redirect to thank you page
-          window.location.href = "/gracias";
         } else {
           alert(
             "Error al enviar la cotización: " +
