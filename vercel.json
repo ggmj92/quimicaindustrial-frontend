@@ -1,0 +1,29 @@
+{
+  "redirects": [
+    {
+      "source": "/producto/:slug/",
+      "destination": "/products/:slug",
+      "permanent": true
+    },
+    {
+      "source": "/producto/:slug",
+      "destination": "/products/:slug",
+      "permanent": true
+    },
+    {
+      "source": "/en/",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/en",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/:slug((?!(?:contacto|cotizacion|gracias|gracias-contacto|terminos-condiciones|politica-privacidad|products)$)[a-z0-9][a-z0-9-]*)/",
+      "destination": "/products/:slug",
+      "permanent": true
+    }
+  ]
+}
