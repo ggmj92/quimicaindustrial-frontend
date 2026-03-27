@@ -196,9 +196,7 @@ export function adaptQIProduct(
     // Related products
     upsellIds: [],
     crossSellIds: [],
-    relatedIds: qiProduct.relatedProductIds
-      .map((id) => parseInt(id, 10))
-      .filter((n) => !isNaN(n)),
+    relatedIds: [],
 
     // Optional
     externalUrl: undefined,
