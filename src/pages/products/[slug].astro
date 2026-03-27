@@ -28,7 +28,7 @@ const { slug } = Astro.params;
 const product = await getProductBySlug(slug);
 
 if (!product) {
-  return Astro.redirect("/products");
+  return new Response(null, { status: 404 });
 }
 
 // Get categories for this product
