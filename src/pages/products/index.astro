@@ -10,9 +10,45 @@ import { generateBreadcrumbSchema } from "../../utils/seo";
 const products = await getProducts();
 const categories = await getCategories();
 
-const url = Astro.url;
-const currentPage = Math.max(1, Number(url.searchParams.get("page")) || 1);
 const totalProducts = products.length;
+
+const productData = products.map((product) => {
+  const categoryNames = product.categories
+    .map((id) => categories.find((c) => c.id === id)?.name ?? "")
+    .join(" ");
+  const presentationLabels = product.presentations
+    .map((p) => p.label)
+    .join(" ");
+  return {
+    id: product.id,
+    name: product.name,
+    slug: product.slug,
+    image: product.image || null,
+    summary: product.summary || null,
+    categories: product.categories,
+    presentations: product.presentations.map((p) => ({
+      id: p.id,
+      label: p.label,
+    })),
+    fiscalizado: product.fiscalizado ?? false,
+    popularity: product.popularity,
+    createdAt: product.createdAt,
+    stockStatus: product.stockStatus,
+    price: product.price ?? null,
+    priceText: product.priceText ?? null,
+    // Pre-computed at build time so client doesn't need to look up category names
+    searchText: [
+      product.name,
+      product.summary,
+      categoryNames,
+      presentationLabels,
+    ]
+      .filter(Boolean)
+      .join(" "),
+  };
+});
+// Escape </ to prevent </script> from terminating the data block early
+const productDataJson = JSON.stringify(productData).replace(/<\//g, "<\\/");
 
 const presentationOptions = Array.from(
   new Set(
@@ -289,132 +325,7 @@ const breadcrumbSchema = generateBreadcrumbSchema([
           Mostrando {totalProducts} productos
         </p>
 
-        <div class="product-grid" data-product-grid>
-          {
-            products.map((product) => {
-              const primaryPresentation = product.presentations[0];
-              const categoryNames = product.categories
-                .map(
-                  (categoryId) =>
-                    categories.find((item) => item.id === categoryId)?.name ??
-                    categoryId,
-                )
-                .join(" ");
-              const presentationLabels = product.presentations
-                .map((presentation) => presentation.label)
-                .join(" ");
-              const searchIndex = [
-                product.name,
-                product.summary,
-                categoryNames,
-                presentationLabels,
-              ]
-                .filter(Boolean)
-                .join(" ");
-              return (
-                <article
-                  class="product-card"
-                  data-product-card
-                  data-sort-name={product.name}
-                  data-search-index={searchIndex}
-                  data-popularity={product.popularity}
-                  data-date={product.createdAt}
-                  data-categories={product.categories.map(String).join(",")}
-                  data-presentations={product.presentations
-                    .map((item) => item.label)
-                    .join(",")}
-                >
-                  <div class="product-image">
-                    {product.image ? (
-                      <img
-                        src={product.image}
-                        alt={`Imagen de ${product.name}`}
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div class="image-fallback" aria-hidden="true" />
-                    )}
-                  </div>
-                  <div class="product-body">
-                    <h3>{product.name}</h3>
-                    {product.fiscalizado && (
-                      <span class="fiscalizado-badge">
-                        <svg
-                          width="16"
-                          height="16"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          stroke-width="2"
-                        >
-                          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                        </svg>
-                        Producto Fiscalizado
-                      </span>
-                    )}
-                    {product.summary && (
-                      <p class="product-summary">{product.summary}</p>
-                    )}
-                    {product.presentations.length > 0 && (
-                      <div class="product-presentations-list">
-                        {product.presentations
-                          .slice(0, 3)
-                          .map((presentation) => (
-                            <span class="presentation-badge">
-                              {presentation.label}
-                            </span>
-                          ))}
-                        {product.presentations.length > 3 && (
-                          <span class="presentation-badge">
-                            +{product.presentations.length - 3}
-                          </span>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                  <div class="product-actions">
-                    <a
-                      class="btn btn-outline"
-                      href={`/products/${product.slug}`}
-                      data-view-product
-                      data-product-id={product.id}
-                      data-product-name={product.name}
-                      data-product-slug={product.slug}
-                    >
-                      Ver más
-                    </a>
-                    <button
-                      class="btn btn-primary"
-                      type="button"
-                      data-action="add-to-cart"
-                      data-product-id={product.id}
-                      data-product-name={product.name}
-                      data-product-slug={product.slug}
-                      data-product-presentation={
-                        primaryPresentation?.label || ""
-                      }
-                      data-presentation-id={primaryPresentation?.id || ""}
-                      data-product-image={product.image}
-                      data-product-price={product.price ?? ""}
-                      data-product-price-text={product.priceText ?? ""}
-                      data-product-stock-status={product.stockStatus}
-                    >
-                      Agregar
-                    </button>
-                  </div>
-                </article>
-              );
-            })
-          }
-        </div>
-
-        {
-          !products.length && (
-            <p class="empty-state">
-              No hay productos disponibles en este momento.
-            </p>
-          )
-        }
+        <div class="product-grid" data-product-grid></div>
 
         <nav
           class="pagination"
@@ -425,6 +336,11 @@ const breadcrumbSchema = generateBreadcrumbSchema([
       </div>
     </div>
   </section>
+  <script
+    type="application/json"
+    id="products-data"
+    set:html={productDataJson}
+  />
 </Layout>
 
 <script>
@@ -438,22 +354,64 @@ const breadcrumbSchema = generateBreadcrumbSchema([
         .normalize("NFD")
         .replace(/[\u0300-\u036f]/g, "");
 
-    const cards = Array.from(
-      grid.querySelectorAll<HTMLElement>("[data-product-card]"),
-    ).map((element) => ({
-      element,
-      rawName: element.getAttribute("data-sort-name") || "",
-      searchIndex: normalizeText(
-        element.getAttribute("data-search-index") || "",
-      ),
-      categories: (element.getAttribute("data-categories") || "")
-        .split(",")
-        .filter(Boolean),
-      presentations: (element.getAttribute("data-presentations") || "")
-        .split(",")
-        .filter(Boolean),
-      popularity: Number(element.getAttribute("data-popularity") || "0"),
-      date: element.getAttribute("data-date") || "",
+    interface ProductData {
+      id: string;
+      name: string;
+      slug: string;
+      image: string | null;
+      summary: string | null;
+      categories: string[];
+      presentations: Array<{ id: string; label: string }>;
+      fiscalizado: boolean;
+      popularity: number;
+      createdAt: string;
+      stockStatus: string;
+      price: string | null;
+      priceText: string | null;
+      searchText: string;
+    }
+
+    const esc = (s: unknown): string =>
+      String(s ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+
+    const FISCALIZADO_SVG = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`;
+
+    const buildCardHTML = (product: ProductData): string => {
+      const primary = product.presentations[0];
+      const visible = product.presentations.slice(0, 3);
+      const extra = product.presentations.length - 3;
+      return `<article class="product-card" data-product-card>
+        <div class="product-image">${product.image ? `<img src="${esc(product.image)}" alt="Imagen de ${esc(product.name)}" loading="lazy" />` : `<div class="image-fallback" aria-hidden="true"></div>`}</div>
+        <div class="product-body">
+          <h3>${esc(product.name)}</h3>
+          ${product.fiscalizado ? `<span class="fiscalizado-badge">${FISCALIZADO_SVG} Producto Fiscalizado</span>` : ""}
+          ${product.summary ? `<p class="product-summary">${esc(product.summary)}</p>` : ""}
+          ${product.presentations.length > 0 ? `<div class="product-presentations-list">${visible.map((p) => `<span class="presentation-badge">${esc(p.label)}</span>`).join("")}${extra > 0 ? `<span class="presentation-badge">+${extra}</span>` : ""}</div>` : ""}
+        </div>
+        <div class="product-actions">
+          <a class="btn btn-outline" href="/products/${esc(product.slug)}" data-view-product data-product-id="${esc(product.id)}" data-product-name="${esc(product.name)}" data-product-slug="${esc(product.slug)}">Ver más</a>
+          <button class="btn btn-primary" type="button" data-action="add-to-cart" data-product-id="${esc(product.id)}" data-product-name="${esc(product.name)}" data-product-slug="${esc(product.slug)}" data-product-presentation="${esc(primary?.label ?? "")}" data-presentation-id="${esc(primary?.id ?? "")}" data-product-image="${esc(product.image ?? "")}" data-product-price="${esc(product.price ?? "")}" data-product-price-text="${esc(product.priceText ?? "")}" data-product-stock-status="${esc(product.stockStatus)}">Agregar</button>
+        </div>
+      </article>`;
+    };
+
+    const rawDataEl = document.getElementById("products-data");
+    const rawProducts: ProductData[] = rawDataEl
+      ? JSON.parse(rawDataEl.textContent || "[]")
+      : [];
+
+    const cards = rawProducts.map((product) => ({
+      data: product,
+      rawName: product.name,
+      searchIndex: normalizeText(product.searchText),
+      categories: product.categories,
+      presentations: product.presentations.map((p) => p.label),
+      popularity: product.popularity,
+      date: product.createdAt,
     }));
 
     const perPageSelect = document.querySelector("[data-filter-per-page]");
@@ -535,19 +493,10 @@ const breadcrumbSchema = generateBreadcrumbSchema([
       const start = (state.currentPage - 1) * state.perPage;
       const end = start + state.perPage;
 
-      filtered.forEach((item, index) => {
-        const isVisible = index >= start && index < end;
-        item.element.style.display = isVisible ? "" : "none";
-        if (isVisible) {
-          grid.appendChild(item.element);
-        }
-      });
-
-      cards.forEach((card) => {
-        if (!filtered.includes(card)) {
-          card.element.style.display = "none";
-        }
-      });
+      const pageItems = filtered.slice(start, end);
+      grid.innerHTML = totalItems
+        ? pageItems.map((item) => buildCardHTML(item.data)).join("")
+        : `<p class="empty-state">No encontramos productos con esos filtros</p>`;
 
       if (resultCount) {
         if (!totalItems) {
