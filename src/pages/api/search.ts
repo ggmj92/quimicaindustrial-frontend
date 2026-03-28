@@ -30,7 +30,7 @@ export const GET: APIRoute = async ({ url }) => {
       headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
-    console.error("❌ Search API error:", error);
+    console.error("Search API error:", error);
     return new Response(JSON.stringify({ error: "Search failed" }), {
       status: 500,
       headers: { "Content-Type": "application/json" },
