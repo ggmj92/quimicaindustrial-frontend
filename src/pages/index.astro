@@ -15,10 +15,12 @@ import {
   generateWebSiteSchema,
 } from "../utils/seo";
 
-const categories = await getCategories();
-const featuredProducts = await getFeaturedProducts();
+const [categories, featuredProducts, banners] = await Promise.all([
+  getCategories(),
+  getFeaturedProducts(),
+  getHomepageBanners().catch(() => [] as QIBanner[]),
+]);
 const heroProduct = featuredProducts[0] ?? null;
-const banners: QIBanner[] = await getHomepageBanners().catch(() => []);
 const firstBanner: QIBanner | null = banners[0] ?? null;
 const remainingBanners: QIBanner[] = banners.slice(1);
 
@@ -68,6 +70,7 @@ const faqSchema = generateFAQSchema();
         />
       )
     }
+    <link rel="preload" as="image" href="/images/industrial/worker-tanks.jpg" />
   </Fragment>
   <!-- Banner Carousel -->
   <section
