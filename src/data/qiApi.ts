@@ -177,6 +177,17 @@ export async function getProductSlugs(): Promise<string[]> {
   return result ? result.map((r) => r.slug) : [];
 }
 
+export interface QIProductCatalogItem {
+  id: string;
+  name: string;
+  presentations: Array<{ id: string; label: string }>;
+}
+
+export async function getProductCatalog(): Promise<QIProductCatalogItem[]> {
+  const result = await fetchAPI<QIProductCatalogItem[]>("/products/catalog");
+  return result || [];
+}
+
 export async function getProductBySlug(
   slug: string,
 ): Promise<QIProduct | null> {
