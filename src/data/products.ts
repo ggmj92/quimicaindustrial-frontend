@@ -100,30 +100,43 @@ export interface Product {
   totalQuotes?: number;
 }
 
-// Cache only presentations (rarely change)
-let cachedPresentations: qiApi.QIPresentation[] | null = null;
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes — matches ISR revalidation window
 
-// Load all data needed for adaptation
-// Categories and products are always fetched fresh to reflect dashboard changes
+interface CacheEntry<T> {
+  data: T;
+  expiresAt: number;
+}
+
+let categoriesCache: CacheEntry<qiApi.QICategory[]> | null = null;
+let presentationsCache: CacheEntry<qiApi.QIPresentation[]> | null = null;
+
 async function loadBaseData() {
-  // Always fetch fresh categories to reflect changes
-  const qiCategories = await qiApi.getCategories({ includeCount: true });
-  const categories = qiCategories.map(adaptQICategory);
+  const now = Date.now();
 
-  // Cache presentations as they rarely change
-  if (!cachedPresentations) {
-    cachedPresentations = await qiApi.getPresentations();
+  if (!categoriesCache || now > categoriesCache.expiresAt) {
+    const fetched = await qiApi.getCategories({ includeCount: true });
+    categoriesCache = { data: fetched, expiresAt: now + CACHE_TTL_MS };
   }
 
+  if (!presentationsCache || now > presentationsCache.expiresAt) {
+    const fetched = await qiApi.getPresentations();
+    presentationsCache = { data: fetched, expiresAt: now + CACHE_TTL_MS };
+  }
+
+  const qiCategories = categoriesCache.data;
   return {
     qiCategories,
-    categories,
-    presentations: cachedPresentations,
+    categories: qiCategories.map(adaptQICategory),
+    presentations: presentationsCache.data,
   };
 }
 
 export async function getProductSlugs(): Promise<string[]> {
   return qiApi.getProductSlugs();
+}
+
+export async function getQuoteCatalog(): Promise<qiApi.QIProductCatalogItem[]> {
+  return qiApi.getProductCatalog();
 }
 
 export async function getProducts(): Promise<Product[]> {

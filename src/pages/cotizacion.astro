@@ -1,10 +1,10 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import "../styles/pages/quote.css";
-import { getProducts } from "../data/products";
+import { getQuoteCatalog } from "../data/products";
 
-const products = await getProducts();
-const serializedProducts = JSON.stringify(products);
+const catalog = await getQuoteCatalog();
+const serializedProducts = JSON.stringify(catalog).replace(/<\//g, "<\\/");
 ---
 
 <Layout
