@@ -144,7 +144,7 @@ export async function getProducts(): Promise<Product[]> {
     const { qiCategories, presentations } = await loadBaseData();
 
     // Always fetch fresh products to reflect dashboard changes
-    const qiProducts = await qiApi.getProducts({ limit: 1000 });
+    const qiProducts = await qiApi.getProducts({ limit: 500 });
 
     return qiProducts.map((p) =>
       adaptQIProduct(p, qiCategories || [], presentations || []),
@@ -244,7 +244,7 @@ export async function getProductsByCategory(
   const qiProducts = await qiApi.getProducts({
     category: category._id,
     status: "published",
-    limit: 1000,
+    limit: 100,
   });
 
   return qiProducts.map((p) => adaptQIProduct(p, qiCategories, presentations));

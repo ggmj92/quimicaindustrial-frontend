@@ -1,10 +1,10 @@
 import type { APIRoute } from "astro";
-import { getProducts } from "../data/products";
+import { getProductSlugs } from "../data/products";
 
 export const GET: APIRoute = async () => {
-  const products = await getProducts();
+  const slugs = await getProductSlugs();
   const perPage = 18;
-  const totalPages = Math.ceil(products.length / perPage);
+  const totalPages = Math.ceil(slugs.length / perPage);
 
   const baseUrl = "https://www.quimicaindustrial.pe";
   const currentDate = new Date().toISOString().split("T")[0];
@@ -21,8 +21,8 @@ export const GET: APIRoute = async () => {
     changefreq: "daily",
   }));
 
-  const productPages = products.map((product) => ({
-    url: `/products/${product.slug}`,
+  const productPages = slugs.map((slug) => ({
+    url: `/products/${slug}`,
     priority: "0.8",
     changefreq: "weekly",
   }));
