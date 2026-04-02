@@ -1,0 +1,377 @@
+---
+
+---
+
+<!-- Product List Section -->
+<div class="form-section">
+  <h2>Productos a Cotizar</h2>
+  <div class="product-table">
+    <div class="product-table-header">
+      <div class="product-header-cell">Producto</div>
+      <div class="product-header-cell">Presentación</div>
+      <div class="product-header-cell">Cantidad/Unidades</div>
+      <div class="product-header-cell">Frecuencia de compra</div>
+      <div class="product-header-cell"></div>
+    </div>
+    <div class="product-list" data-product-list>
+      <!-- Product items will be added here dynamically -->
+    </div>
+  </div>
+  <button type="button" class="btn btn-outline" data-add-product>
+    + Agregar Más Productos
+  </button>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const catalogScript = document.getElementById("quote-catalog-data");
+    let catalog = [];
+    if (catalogScript?.textContent) {
+      try {
+        catalog = JSON.parse(catalogScript.textContent);
+      } catch (error) {
+        console.warn("No se pudo leer el catálogo", error);
+      }
+    }
+
+    const productList = document.querySelector("[data-product-list]");
+    const addProductBtn = document.querySelector("[data-add-product]");
+
+    let productCounter = 0;
+
+    // Create a product item row
+    const createProductItem = (initialProduct = null) => {
+      productCounter++;
+      const itemId = `product-${productCounter}`;
+
+      const item = document.createElement("div");
+      item.className = "product-item";
+      item.dataset.productItem = itemId;
+
+      // Sort products alphabetically for easier searching
+      const sortedCatalog = [...catalog].sort((a, b) =>
+        a.name.localeCompare(b.name, "es"),
+      );
+
+      // Get presentations for initial product if any
+      let presentationOptions =
+        '<option value="">Seleccione presentación</option>';
+      if (
+        initialProduct &&
+        initialProduct.presentations &&
+        initialProduct.presentations.length > 0
+      ) {
+        initialProduct.presentations.forEach((pres) => {
+          presentationOptions += `<option value="${pres.id}">${pres.label}</option>`;
+        });
+      }
+
+      item.innerHTML = `
+        <div class="product-item-row">
+          <div class="product-item-cell">
+            <div class="search-select-wrapper" data-search-wrapper>
+              <input
+                type="text"
+                class="search-select-input"
+                placeholder="Buscar o seleccionar producto..."
+                data-product-search
+                autocomplete="off"
+              />
+              <input
+                type="hidden"
+                name="products[${productCounter}][productId]"
+                data-product-select
+                required
+              />
+            </div>
+          </div>
+
+          <div class="product-item-cell">
+            <select name="products[${productCounter}][presentationId]" data-presentation-select ${!initialProduct || !initialProduct.presentations?.length ? "disabled" : ""}>
+              ${presentationOptions}
+            </select>
+          </div>
+
+          <div class="product-item-cell">
+            <input type="number" name="products[${productCounter}][quantity]" min="1" value="1" required />
+          </div>
+
+          <div class="product-item-cell">
+            <select name="products[${productCounter}][frequency]" required>
+              <option value="unica">Única compra</option>
+              <option value="quincenal">Quincenal</option>
+              <option value="mensual">Mensual</option>
+              <option value="bimestral">Bimestral</option>
+              <option value="trimestral">Trimestral</option>
+            </select>
+          </div>
+
+          <div class="product-item-cell">
+            <button type="button" class="btn-remove" data-remove-product title="Eliminar producto">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 6L6 18M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      `;
+
+      // Setup searchable dropdown
+      const productSearchInput = item.querySelector("[data-product-search]");
+      const productSelect = item.querySelector("[data-product-select]");
+      const presentationSelect = item.querySelector(
+        "[data-presentation-select]",
+      );
+
+      // Create dropdown and append to body
+      const productDropdown = document.createElement("div");
+      productDropdown.className = "search-select-dropdown";
+      productDropdown.setAttribute("hidden", "");
+      const productOptions = document.createElement("div");
+      productOptions.className = "search-select-options";
+      productDropdown.appendChild(productOptions);
+      document.body.appendChild(productDropdown);
+
+      // Populate dropdown options
+      const renderProductOptions = (filter = "") => {
+        if (!productOptions) return;
+
+        const filterLower = filter
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "");
+        const filtered = sortedCatalog.filter((product) => {
+          const nameLower = product.name
+            .toLowerCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "");
+          return nameLower.includes(filterLower);
+        });
+
+        productOptions.innerHTML = "";
+
+        if (filtered.length === 0) {
+          productOptions.innerHTML =
+            '<div class="search-select-option no-results">No se encontraron productos</div>';
+          return;
+        }
+
+        // Show all products (no limit)
+        filtered.forEach((product) => {
+          const option = document.createElement("div");
+          option.className = "search-select-option";
+          option.textContent = product.name;
+          option.dataset.productId = product.id;
+          option.addEventListener("click", () => selectProduct(product));
+          productOptions.appendChild(option);
+        });
+      };
+
+      // Select product function
+      const selectProduct = (product) => {
+        if (productSearchInput instanceof HTMLInputElement) {
+          productSearchInput.value = product.name;
+        }
+        if (productSelect instanceof HTMLInputElement) {
+          productSelect.value = product.id;
+        }
+        if (productDropdown) {
+          productDropdown.setAttribute("hidden", "");
+        }
+
+        // Update presentations
+        updatePresentations(product);
+      };
+
+      // Update presentations based on selected product
+      const updatePresentations = (product) => {
+        if (
+          product &&
+          product.presentations &&
+          product.presentations.length > 0
+        ) {
+          presentationSelect.disabled = false;
+          presentationSelect.innerHTML =
+            '<option value="">Seleccione presentación</option>';
+          product.presentations.forEach((pres) => {
+            const option = document.createElement("option");
+            option.value = pres.id;
+            option.textContent = pres.label;
+            presentationSelect.appendChild(option);
+          });
+        } else {
+          presentationSelect.disabled = true;
+          presentationSelect.innerHTML =
+            '<option value="">Sin presentaciones disponibles</option>';
+        }
+      };
+
+      // Set initial product if provided
+      if (initialProduct) {
+        selectProduct(initialProduct);
+      }
+
+      // Initialize dropdown with all products on first render
+      renderProductOptions("");
+
+      // Position dropdown function
+      const positionDropdown = () => {
+        if (productSearchInput instanceof HTMLElement) {
+          const rect = productSearchInput.getBoundingClientRect();
+          productDropdown.style.position = "fixed";
+          productDropdown.style.top = `${rect.bottom + 4}px`;
+          productDropdown.style.left = `${rect.left}px`;
+          productDropdown.style.width = `${Math.max(rect.width, 300)}px`;
+        }
+      };
+
+      // Search input events
+      productSearchInput?.addEventListener("input", (e) => {
+        const value = (e.target as HTMLInputElement).value;
+        renderProductOptions(value);
+        positionDropdown();
+        if (productDropdown) {
+          productDropdown.removeAttribute("hidden");
+        }
+      });
+
+      productSearchInput?.addEventListener("focus", () => {
+        const currentValue =
+          productSearchInput instanceof HTMLInputElement
+            ? productSearchInput.value
+            : "";
+        renderProductOptions(currentValue);
+        positionDropdown();
+        if (productDropdown) {
+          productDropdown.removeAttribute("hidden");
+        }
+      });
+
+      productSearchInput?.addEventListener("click", () => {
+        positionDropdown();
+        if (productDropdown) {
+          productDropdown.removeAttribute("hidden");
+        }
+      });
+
+      // Reposition on scroll/resize
+      window.addEventListener(
+        "scroll",
+        () => {
+          if (!productDropdown.hasAttribute("hidden")) {
+            positionDropdown();
+          }
+        },
+        true,
+      );
+
+      window.addEventListener("resize", () => {
+        if (!productDropdown.hasAttribute("hidden")) {
+          positionDropdown();
+        }
+      });
+
+      // Close dropdown when clicking outside
+      document.addEventListener("click", (e) => {
+        if (!item.contains(e.target as Node)) {
+          if (productDropdown) {
+            productDropdown.setAttribute("hidden", "");
+          }
+        }
+      });
+
+      // Add event listener for remove button
+      const removeBtn = item.querySelector("[data-remove-product]");
+      removeBtn?.addEventListener("click", async () => {
+        // Show custom confirmation dialog
+        const confirmed = await window.showConfirm(
+          "¿Está seguro que desea eliminar este producto de la cotización?",
+          "Confirmar eliminación",
+          "Eliminar",
+          true,
+        );
+        if (!confirmed) {
+          return;
+        }
+
+        // Get the selected product ID and presentation ID
+        const productSelect = item.querySelector("[data-product-select]");
+        const presentationSelect = item.querySelector(
+          "[data-presentation-select]",
+        );
+
+        if (productSelect instanceof HTMLInputElement) {
+          const productId = productSelect.value;
+          const presentationId =
+            presentationSelect instanceof HTMLSelectElement
+              ? presentationSelect.value
+              : "";
+
+          // Remove from cart if it exists
+          if (productId && window.qiCart?.remove) {
+            const cartItem = {
+              productId: productId,
+              presentationId: presentationId,
+            };
+            window.qiCart.remove(cartItem);
+          }
+        }
+
+        // Remove the item from the form
+        item.remove();
+
+        // If no products left, add one empty row
+        if (!productList?.querySelector("[data-product-item]")) {
+          productList?.appendChild(createProductItem());
+        }
+      });
+
+      return item;
+    };
+
+    // Load cart items and prefill form
+    const loadCartItems = () => {
+      const cartItems = window.qiCart?.getItems ? window.qiCart.getItems() : [];
+
+      if (cartItems.length > 0) {
+        // Add a product item for each cart item
+        cartItems.forEach((cartItem) => {
+          const product = catalog.find((p) => p.id === cartItem.productId);
+          if (product) {
+            const item = createProductItem(product);
+            productList?.appendChild(item);
+
+            // Set the presentation if it exists
+            if (cartItem.presentationId) {
+              const presentationSelect = item.querySelector(
+                "[data-presentation-select]",
+              );
+              if (presentationSelect instanceof HTMLSelectElement) {
+                presentationSelect.value = cartItem.presentationId;
+              }
+            }
+
+            // Set quantity
+            if (cartItem.quantity) {
+              const quantityInput = item.querySelector('input[type="number"]');
+              if (quantityInput instanceof HTMLInputElement) {
+                quantityInput.value = String(cartItem.quantity);
+              }
+            }
+          }
+        });
+      } else {
+        // No cart items, add one empty row
+        productList?.appendChild(createProductItem());
+      }
+    };
+
+    // Load cart items on page load
+    loadCartItems();
+
+    // Add product button handler
+    addProductBtn?.addEventListener("click", () => {
+      productList?.appendChild(createProductItem());
+    });
+  });
+</script>
