@@ -1,0 +1,533 @@
+---
+import QuoteProductSelector from "./QuoteProductSelector.astro";
+import "../styles/pages/quote.css";
+
+interface Props {
+  catalog: string;
+}
+const { catalog } = Astro.props;
+---
+
+<section class="quote">
+  <div class="container quote-layout">
+    <form id="formulario-cotizacion" class="quote-form" data-quote-form>
+      <h1>Solicitud de Cotización</h1>
+      <p class="quote-intro">
+        Complete el formulario con los productos que necesita y sus datos de
+        contacto. Nos comunicaremos con usted a la brevedad.
+      </p>
+
+      <QuoteProductSelector />
+
+      <!-- Client Information Section -->
+      <div class="form-section">
+        <h2>Información del Cliente</h2>
+
+        <label>
+          Tipo de Cliente
+          <select name="clientType" data-client-type required>
+            <option value="">Seleccione una opción</option>
+            <option value="natural">Persona Natural</option>
+            <option value="empresa">Empresa</option>
+            <option value="natural-empresa">Persona con Empresa</option>
+          </select>
+        </label>
+
+        <div class="client-fields" data-client-fields>
+          <!-- Personal fields -->
+          <div
+            class="personal-fields"
+            data-personal-fields
+            style="display: none;"
+          >
+            <label>
+              Nombre
+              <input type="text" name="firstName" placeholder="Nombre" />
+            </label>
+            <label>
+              Apellidos
+              <input type="text" name="lastName" placeholder="Apellidos" />
+            </label>
+            <label>
+              DNI
+              <input
+                type="text"
+                name="dni"
+                placeholder="12345678"
+                pattern="[0-9]{8}"
+              />
+            </label>
+            <label>
+              Celular
+              <input type="tel" name="phone" placeholder="+51 999 999 999" />
+            </label>
+            <label>
+              Email
+              <input
+                type="email"
+                name="email"
+                placeholder="correo@ejemplo.com"
+              />
+            </label>
+          </div>
+
+          <!-- Company fields -->
+          <div
+            class="company-fields"
+            data-company-fields
+            style="display: none;"
+          >
+            <h3>Información de la Empresa</h3>
+            <label>
+              Razón Social
+              <input
+                type="text"
+                name="companyName"
+                placeholder="Nombre de la empresa"
+              />
+            </label>
+            <label>
+              RUC
+              <input
+                type="text"
+                name="ruc"
+                placeholder="20123456789"
+                pattern="[0-9]{11}"
+              />
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contact Preference Section -->
+      <div class="form-section">
+        <h3>¿Cómo prefiero que me contacten?</h3>
+        <div class="contact-preferences">
+          <label class="checkbox-button">
+            <input type="checkbox" name="contactEmail" value="email" />
+            <span>Email</span>
+          </label>
+          <label class="checkbox-button">
+            <input type="checkbox" name="contactWhatsapp" value="whatsapp" />
+            <span>WhatsApp</span>
+          </label>
+          <label class="checkbox-button">
+            <input type="checkbox" name="contactPhone" value="llamada" />
+            <span>Llamada</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Additional Comments -->
+      <div class="form-section">
+        <label>
+          Observaciones / Comentarios
+          <textarea
+            name="observations"
+            rows="4"
+            placeholder="Indique detalles adicionales sobre su solicitud"
+          ></textarea>
+        </label>
+      </div>
+
+      <!-- Terms and Conditions -->
+      <div class="form-section terms-section">
+        <label class="checkbox">
+          <input type="checkbox" name="acceptTerms" required />
+          <span>
+            He leído los <a href="/terminos-condiciones" target="_blank"
+              >términos y condiciones</a
+            >
+          </span>
+        </label>
+        <label class="checkbox">
+          <input type="checkbox" name="acceptPrivacy" required />
+          <span>
+            Acepto la <a href="/politica-privacidad" target="_blank"
+              >política de privacidad</a
+            >
+          </span>
+        </label>
+      </div>
+
+      <!-- Submit Button -->
+      <button type="submit" class="btn btn-primary btn-large">
+        Enviar Cotización
+      </button>
+
+      <p class="quote-feedback" data-quote-feedback hidden>
+        ¡Gracias! Hemos recibido tu solicitud de cotización. Nos comunicaremos
+        contigo en las próximas horas.
+      </p>
+    </form>
+  </div>
+</section>
+
+<!-- Confirmation Modal -->
+<div class="modal-overlay" data-confirm-modal hidden>
+  <div class="modal-dialog">
+    <div class="modal-header">
+      <h3 data-confirm-title>Confirmar</h3>
+    </div>
+    <div class="modal-body">
+      <p data-confirm-message>¿Está seguro?</p>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline" data-confirm-cancel>
+        Cancelar
+      </button>
+      <button type="button" class="btn" data-confirm-ok> Confirmar </button>
+    </div>
+  </div>
+</div>
+
+<script type="application/json" id="quote-catalog-data" set:html={catalog} />
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const clientTypeSelect = document.querySelector("[data-client-type]");
+    const personalFields = document.querySelector("[data-personal-fields]");
+    const companyFields = document.querySelector("[data-company-fields]");
+    const form = document.querySelector("[data-quote-form]");
+    const feedback = document.querySelector("[data-quote-feedback]");
+
+    // GTM Event: Track form start (when user first interacts with form)
+    let formStartTracked = false;
+    const trackFormStart = () => {
+      if (!formStartTracked) {
+        formStartTracked = true;
+        window.dataLayer = window.dataLayer || [];
+        window.dataLayer.push({
+          event: "form_start",
+          form_id: "quote_form",
+          form_name: "Solicitud de Cotización",
+        });
+      }
+    };
+
+    // Track form start on first input/select/textarea interaction
+    form?.addEventListener("input", trackFormStart, { once: true });
+    form?.addEventListener("change", trackFormStart, { once: true });
+    form?.addEventListener("focus", trackFormStart, {
+      capture: true,
+      once: true,
+    });
+
+    // Modal elements
+    const confirmModal = document.querySelector("[data-confirm-modal]");
+    const confirmOkBtn = document.querySelector("[data-confirm-ok]");
+    const confirmCancelBtn = document.querySelector("[data-confirm-cancel]");
+    const confirmMessage = document.querySelector("[data-confirm-message]");
+    const confirmTitle = document.querySelector("[data-confirm-title]");
+
+    let confirmResolve = null;
+
+    // Custom confirm function — exposed on window for QuoteProductSelector
+    const showConfirm = (
+      message,
+      title = "Confirmar",
+      okText = "Confirmar",
+      isDanger = false,
+    ) => {
+      return new Promise((resolve) => {
+        confirmResolve = resolve;
+        if (confirmMessage) confirmMessage.textContent = message;
+        if (confirmTitle) confirmTitle.textContent = title;
+        if (confirmOkBtn) {
+          confirmOkBtn.textContent = okText;
+          if (isDanger) {
+            confirmOkBtn.classList.add("btn-danger");
+          } else {
+            confirmOkBtn.classList.remove("btn-danger");
+          }
+        }
+        if (confirmModal) confirmModal.removeAttribute("hidden");
+        document.body.style.overflow = "hidden";
+      });
+    };
+
+    const hideConfirm = () => {
+      if (confirmModal) confirmModal.setAttribute("hidden", "");
+      document.body.style.overflow = "";
+    };
+
+    confirmOkBtn?.addEventListener("click", () => {
+      hideConfirm();
+      if (confirmResolve) confirmResolve(true);
+    });
+
+    confirmCancelBtn?.addEventListener("click", () => {
+      hideConfirm();
+      if (confirmResolve) confirmResolve(false);
+    });
+
+    // Close modal on overlay click
+    confirmModal?.addEventListener("click", (e) => {
+      if (e.target === confirmModal) {
+        hideConfirm();
+        if (confirmResolve) confirmResolve(false);
+      }
+    });
+
+    // Expose showConfirm for QuoteProductSelector
+    window.showConfirm = showConfirm;
+
+    // Client type change handler
+    clientTypeSelect?.addEventListener("change", (e) => {
+      const value = (e.target as HTMLSelectElement).value;
+
+      if (value === "natural") {
+        // Persona Natural: Show only personal fields
+        personalFields.style.display = "grid";
+        companyFields.style.display = "none";
+        // Make personal fields required
+        personalFields.querySelectorAll("input").forEach((input) => {
+          input.setAttribute("required", "");
+        });
+        // Remove required from company fields
+        companyFields.querySelectorAll("input").forEach((input) => {
+          input.removeAttribute("required");
+        });
+      } else if (value === "empresa" || value === "natural-empresa") {
+        // Empresa OR Persona con Empresa: Show ALL fields (personal + company)
+        personalFields.style.display = "grid";
+        companyFields.style.display = "grid";
+        // Make all fields required
+        personalFields.querySelectorAll("input").forEach((input) => {
+          input.setAttribute("required", "");
+        });
+        companyFields.querySelectorAll("input").forEach((input) => {
+          input.setAttribute("required", "");
+        });
+      } else {
+        personalFields.style.display = "none";
+        companyFields.style.display = "none";
+      }
+    });
+
+    // Form submission handler
+    form?.addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const productList = document.querySelector("[data-product-list]");
+
+      // 1. Validate at least one product with all required fields
+      const productItems = productList?.querySelectorAll("[data-product-item]");
+      if (!productItems || productItems.length === 0) {
+        alert("Debe agregar al menos un producto para cotizar.");
+        return;
+      }
+
+      // Check each product has all required fields filled
+      let hasValidProduct = false;
+      for (const item of productItems) {
+        const productId = item.querySelector("[data-product-select]")?.value;
+        const quantity = item.querySelector('input[type="number"]')?.value;
+        const frequency = item.querySelector(
+          'select[name*="frequency"]',
+        )?.value;
+
+        if (productId && quantity && frequency) {
+          hasValidProduct = true;
+          break;
+        }
+      }
+
+      if (!hasValidProduct) {
+        alert(
+          "Debe completar al menos un producto con todos sus datos (nombre, presentación si aplica, cantidad y frecuencia de compra).",
+        );
+        return;
+      }
+
+      // 2. Validate client type is selected
+      const clientType = clientTypeSelect?.value;
+      if (!clientType) {
+        alert("Por favor, seleccione el tipo de cliente.");
+        return;
+      }
+
+      // 3. Validate contact info based on client type
+      if (clientType === "natural") {
+        const firstName = form.querySelector('input[name="firstName"]')?.value;
+        const lastName = form.querySelector('input[name="lastName"]')?.value;
+        const dni = form.querySelector('input[name="dni"]')?.value;
+        const phone = form.querySelector('input[name="phone"]')?.value;
+        const email = form.querySelector('input[name="email"]')?.value;
+
+        if (!firstName || !lastName || !dni || !phone || !email) {
+          alert(
+            "Por favor, complete todos los campos de información personal.",
+          );
+          return;
+        }
+      } else if (clientType === "empresa" || clientType === "natural-empresa") {
+        const firstName = form.querySelector('input[name="firstName"]')?.value;
+        const lastName = form.querySelector('input[name="lastName"]')?.value;
+        const dni = form.querySelector('input[name="dni"]')?.value;
+        const phone = form.querySelector('input[name="phone"]')?.value;
+        const email = form.querySelector('input[name="email"]')?.value;
+        const companyName = form.querySelector(
+          'input[name="companyName"]',
+        )?.value;
+        const ruc = form.querySelector('input[name="ruc"]')?.value;
+
+        if (
+          !firstName ||
+          !lastName ||
+          !dni ||
+          !phone ||
+          !email ||
+          !companyName ||
+          !ruc
+        ) {
+          alert(
+            "Por favor, complete todos los campos de información personal y de empresa.",
+          );
+          return;
+        }
+      }
+
+      // 4. Validate at least one contact preference
+      const contactPrefsChecked = form.querySelectorAll(
+        'input[name^="contact"]:checked',
+      );
+      if (contactPrefsChecked.length === 0) {
+        alert(
+          "Por favor, seleccione al menos una forma de contacto preferida.",
+        );
+        return;
+      }
+
+      // 5. Validate both checkboxes are checked
+      const acceptTerms = form.querySelector(
+        'input[name="acceptTerms"]',
+      )?.checked;
+      const acceptPrivacy = form.querySelector(
+        'input[name="acceptPrivacy"]',
+      )?.checked;
+
+      if (!acceptTerms || !acceptPrivacy) {
+        alert(
+          "Debe aceptar los términos y condiciones y la política de privacidad para continuar.",
+        );
+        return;
+      }
+
+      // Show custom confirmation dialog
+      const confirmed = await showConfirm(
+        "¿Está seguro que desea enviar esta cotización?",
+        "Confirmar envío",
+        "Enviar Cotización",
+        false,
+      );
+      if (!confirmed) {
+        return;
+      }
+
+      // Collect form data
+      const formData = new FormData(form);
+
+      // Build products array
+      const products = [];
+      const productItemsForSubmit = productList?.querySelectorAll(
+        "[data-product-item]",
+      );
+      productItemsForSubmit?.forEach((item) => {
+        const productId = item.querySelector("[data-product-select]")?.value;
+        const presentationSelect = item.querySelector(
+          'select[name*="presentationId"]',
+        );
+        const presentationId = presentationSelect?.value || null;
+        const presentationLabel =
+          presentationSelect?.selectedOptions[0]?.text || "N/A";
+        const quantity = item.querySelector('input[type="number"]')?.value;
+        const frequency = item.querySelector(
+          'select[name*="frequency"]',
+        )?.value;
+
+        if (productId && quantity && frequency) {
+          products.push({
+            productId,
+            presentationId,
+            presentationLabel,
+            quantity: parseInt(quantity),
+            frequency,
+          });
+        }
+      });
+
+      // Build contact preferences
+      const contactPreferences = {
+        email: formData.get("contactEmail") !== null,
+        whatsapp: formData.get("contactWhatsapp") !== null,
+        phone: formData.get("contactPhone") !== null,
+      };
+
+      // Build quote data
+      const quoteData = {
+        clientType: formData.get("clientType"),
+        firstName: formData.get("firstName"),
+        lastName: formData.get("lastName"),
+        dni: formData.get("dni"),
+        phone: formData.get("phone"),
+        email: formData.get("email"),
+        companyName: formData.get("companyName") || null,
+        ruc: formData.get("ruc") || null,
+        products,
+        contactPreferences,
+        observations: formData.get("observations") || "",
+      };
+
+      // Send to backend API
+      const API_URL =
+        import.meta.env.PUBLIC_QI_API_URL?.replace("/api/qi", "") ||
+        "https://oregonchem-backend.onrender.com";
+
+      try {
+        const response = await fetch(`${API_URL}/api/qi/quotes`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(quoteData),
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          // Clear cart before GTM fires so it doesn't block the callback
+          if (window.qiCart) {
+            window.qiCart.clear();
+          }
+
+          // GTM Event: Form Submit
+          // eventCallback fires after all GTM tags have processed the event.
+          // eventTimeout ensures the redirect still happens within 2s if GTM is blocked.
+          window.dataLayer = window.dataLayer || [];
+          window.dataLayer.push({
+            event: "form_submit",
+            form_id: "quote_form",
+            form_name: "Solicitud de Cotización",
+            quote_id: result.data?.id || null,
+            product_ids: products.map((p) => p.productId),
+            product_count: products.length,
+            eventCallback: () => {
+              const qid = result.data?.id || "";
+              window.location.href = `/gracias${qid ? `?quote_id=${encodeURIComponent(qid)}` : ""}`;
+            },
+            eventTimeout: 2000,
+          });
+        } else {
+          alert(
+            "Error al enviar la cotización: " +
+              (result.error || "Error desconocido"),
+          );
+        }
+      } catch (error) {
+        console.error("Error submitting quote:", error);
+        alert("Error al enviar la cotización. Por favor, intente nuevamente.");
+      }
+    });
+  });
+</script>
